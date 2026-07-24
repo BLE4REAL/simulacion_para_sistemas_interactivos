@@ -45,3 +45,16 @@ Otra dificultad fue conseguir que las estelas se vieran llamativas sin saturar l
 También tuve dificultades para mantener un flujo constante de faroles. Inicialmente aparecían todos al mismo tiempo y luego la pantalla quedaba vacía hasta que terminaban de subir. Finalmente solucioné el problema reciclando los faroles cuando abandonan la parte superior de la pantalla y asignando tiempos de aparición diferentes para cada uno.
 
 Finalmente fue necesario ajustar muchas veces la intensidad de la interacción entre los faroles y el usuario para encontrar un equilibrio donde la influencia del mouse fuera evidente, pero sin perder el comportamiento autónomo del sistema.
+
+## Versión final del proyecto
+<img width="1238" height="1094" alt="image" src="https://github.com/user-attachments/assets/2b98dc87-8602-46ee-887b-56815d7b4351" />
+
+## 6. Uso dado a la IA generativa y cambios realizados sobre sus propuestas
+
+Durante el desarrollo utilicé inteligencia artificial como una herramienta de apoyo para generar ideas, resolver problemas de programación y explorar diferentes alternativas para implementar el comportamiento del sistema.
+
+La IA propuso inicialmente diferentes formas de generar el movimiento de los faroles, implementar el ruido Perlin, construir el sistema de estelas y desarrollar la interacción entre los faroles y el usuario. Sin embargo, prácticamente todas esas propuestas fueron modificadas durante el proceso de desarrollo.
+
+A medida que realizaba pruebas fui ajustando manualmente parámetros como las velocidades, la intensidad del viento, la fuerza de repulsión entre faroles, la duración de las estelas, el brillo de los destellos y la distribución de aparición de los faroles. También decidí incorporar elementos que no estaban presentes en las primeras propuestas, como los faroles especiales con estelas moradas, el sistema de interacción mediante el mouse y la reutilización continua de los faroles para mantener un flujo constante.
+
+En general, la IA funcionó como un punto de partida para explorar distintas soluciones, pero el resultado final fue construido mediante un proceso continuo de experimentación, pruebas y ajustes realizados de acuerdo con la intención estética y conceptual del proyecto.
