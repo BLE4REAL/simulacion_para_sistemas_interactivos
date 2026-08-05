@@ -117,10 +117,10 @@ Otra idea descartada fue controlar completamente las explosiones mediante tempor
 | **Criterio**                                                                      | **Peso** | **Valoración** | **Aporte**                                                                                                   |
 | --------------------------------------------------------------------------------- | :------: | :------------: | ------------------------------------------------------------------------------------------------------------ |
 | La intención es clara y perceptible en el comportamiento.                         |    20%   |    5   | La contradicción entre protección y destrucción se entiende a través del comportamiento de las partículas.   |
-| Los tipos, cantidades, matriz y parámetros están justificados desde la intención. |    25%   |    5   | Cada tipo de partícula y sus relaciones fueron definidos para reforzar la idea principal del proyecto.       |
-| Comprendo y puedo modificar el funcionamiento técnico del sistema.                |    20%   |    5  | Entiendo cómo funciona el sistema y pude modificar reglas, parámetros e interacciones durante el desarrollo. |
+| Los tipos, cantidades, matriz y parámetros están justificados desde la intención. |    25%   |    5   | tiene que haber un numero mayor de protectores para que se evidencie la contradiccion       |
+| Comprendo y puedo modificar el funcionamiento técnico del sistema.                |    20%   |    5  | puedo modificar reglas, parámetros e interacciones durante el desarrollo. |
 | El sistema produce variaciones con una identidad reconocible.                     |    15%   |    5   | Cada ejecución es diferente, pero siempre mantiene el mismo comportamiento general.                          |
-| Experimenté, comparé, seleccioné y descarté con criterios claros.                 |    10%   |      4    | Probé diferentes soluciones y descarté las que no representaban bien la intención del proyecto.              |
-| Puedo distinguir y sustentar lo diseñado y lo emergente.                          |    10%   |   5  | Las reglas fueron diseñadas por mí, mientras que el comportamiento surge de la interacción entre ellas.      |
+| Experimenté, comparé, seleccioné y descarté con criterios claros.                 |    10%   |      4    | hice varios intentos y descarte opciones de diseño             |
+| Puedo distinguir y sustentar lo diseñado y lo emergente.                          |    10%   |   5  | Las reglas fueron diseñadas por mí, el comportamiento es consecuencia de eso     |
 
 
