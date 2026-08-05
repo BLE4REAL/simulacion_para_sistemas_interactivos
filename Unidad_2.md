@@ -105,3 +105,8 @@ Una de ellas fue hacer que todos los protectores persiguieran siempre a los pert
 También descarté utilizar trayectorias programadas manualmente porque el objetivo de la unidad era construir un comportamiento emergente y no una animación fija.
 
 Otra idea descartada fue controlar completamente las explosiones mediante temporizadores. Finalmente preferí que aparecieran como consecuencia del estado del sistema y de las reglas establecidas.
+
+<img width="1242" height="1096" alt="image" src="https://github.com/user-attachments/assets/e48bbd58-c7c2-48b7-8ab5-3a513dd3bf5f" />
+<img width="1238" height="1094" alt="image" src="https://github.com/user-attachments/assets/fd4531cc-ddcd-4fb5-bb95-36fba672bec7" />
+<img width="1239" height="1093" alt="image" src="https://github.com/user-attachments/assets/7cb7766a-33ea-4bb9-9d9b-a47c629a7622" />
+
