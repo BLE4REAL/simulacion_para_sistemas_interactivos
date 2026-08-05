@@ -119,9 +119,9 @@ Otra idea descartada fue controlar completamente las explosiones mediante tempor
 | **Criterio**                                                                      | **Peso** | **Valoración** | **Aporte**                                                                                                   |
 | --------------------------------------------------------------------------------- | :------: | :------------: | ------------------------------------------------------------------------------------------------------------ |
 | La intención es clara y perceptible en el comportamiento.                         |    20%   |    5   | La contradicción entre protección y destrucción se entiende a través del comportamiento de las partículas.   |
-| Los tipos, cantidades, matriz y parámetros están justificados desde la intención. |    25%   |    5   | tiene que haber un numero mayor de protectores para que se evidencie la contradiccion       |
-| Comprendo y puedo modificar el funcionamiento técnico del sistema.                |    20%   |    5  | puedo modificar reglas, parámetros e interacciones durante el desarrollo. |
-| El sistema produce variaciones con una identidad reconocible.                     |    15%   |    5   | Cada ejecución es diferente, pero siempre mantiene el mismo comportamiento general.                          |
+| Los tipos, cantidades, matriz y parámetros están justificados desde la intención. |    25%   |    4  | tiene que haber un numero mayor de protectores para que se evidencie la contradiccion       |
+| Comprendo y puedo modificar el funcionamiento técnico del sistema.                |    20%   |    4  | puedo modificar reglas, parámetros e interacciones durante el desarrollo. |
+| El sistema produce variaciones con una identidad reconocible.                     |    15%   |    4  | Cada ejecución es diferente, pero siempre mantiene el mismo comportamiento general.                          |
 | Experimenté, comparé, seleccioné y descarté con criterios claros.                 |    10%   |      4    | hice varios intentos y descarte opciones de diseño             |
 | Puedo distinguir y sustentar lo diseñado y lo emergente.                          |    10%   |   5  | Las reglas fueron diseñadas por mí, el comportamiento es consecuencia de eso     |
 
@@ -825,5 +825,533 @@ class Nucleus {
         stroke(210, 235, 255, 35);
         strokeWeight(1.5);
         circle(x, y, this.radius * 3.5);
+    }
+}
+
+## codigo
+
+/* ===========================================================
+   PROTECCIÓN VS DESTRUCCIÓN — Motor Particle Life
+   p5.js (sketch.js autocontenido — usa p5.dom para los sliders,
+   no requiere HTML/CSS externo. Pensado para el p5.js Web Editor
+   o cualquier index.html mínimo que solo cargue p5.js + p5.dom.js)
+
+   - Tipos: 0 = Protector (Azul), 1 = Perturbador (Rojo), 2 = Núcleo (Cian/Blanco).
+   - El clic genera un Núcleo dinámico (Tipo 2).
+   - Explosión al contacto directo entre Protectores (Tipo 0) y Núcleos (Tipo 2).
+   - Panel lateral derecho con sliders para la velocidad máxima de cada tipo.
+   =========================================================== */
+
+// ===============================
+// CONFIGURACIÓN Y TIPOS
+// ===============================
+
+const TYPES = [
+    {
+        name: "Protector",
+        color: [130, 210, 255],
+        glow: "#6ec6ff",
+        radius: 5,
+        maxSpeed: 3.5,
+        rMax: 160,
+        rRepulsion: 25
+    },
+    {
+        name: "Perturbador",
+        color: [255, 70, 70],
+        glow: "#ff4d4d",
+        radius: 4,
+        maxSpeed: 2.2,
+        rMax: 260,
+        rRepulsion: 20
+    },
+    {
+        name: "Nucleo",
+        color: [235, 247, 255],
+        glow: "#a8e6ff",
+        radius: 18,
+        maxSpeed: 1.2,
+        rMax: 200,
+        rRepulsion: 40
+    }
+];
+
+const EXPLOSION_TOLERANCE = 0.1;
+const TYPE_PROTECTOR = 0;
+const TYPE_PERTURBER = 1;
+const TYPE_NUCLEUS   = 2;
+
+const NUM_PROTECTORS = 200;
+const NUM_PERTURBERS = 30;
+const NUM_NUCLEI     = 2;
+
+const FRICTION = 0.91;
+const FORCE_FACTOR = 0.45;
+const TRAIL_ALPHA = 12;
+const PANEL_WIDTH = 260;
+
+// ===============================
+// MATRIZ DE ATRACCIÓN / REPULSIÓN (Particle Life)
+// Valores entre -1.0 (Repulsión) y 1.0 (Atracción)
+// ===============================
+
+const MATRIX = [
+    // [Hacia Protector, Hacia Perturbador, Hacia Núcleo]
+    /* Protector (0)   */ [ -0.1,   0.15,  2.4 ],
+    /* Perturbador (1) */ [ -0.15,  0.0,   0.8 ],
+    /* Núcleo (2)      */ [ -0.3,   0.0,   0.0 ]
+];
+
+// Velocidades base originales (referencia para escalar proporcionalmente,
+// sin nunca recortar/truncar la velocidad natural del algoritmo)
+const BASE_MAX_SPEED = TYPES.map(t => t.maxSpeed);
+
+// ===============================
+// VARIABLES GLOBALES
+// ===============================
+
+let particles = [];
+let mouseParticle = null;
+let explosionFlashes = [];
+
+// Referencias a los sliders y sus etiquetas de valor
+let speedSliders = [];
+let speedValueLabels = [];
+
+// ===============================
+// SETUP
+// ===============================
+
+function setup() {
+    let cnv = createCanvas(windowWidth - PANEL_WIDTH, windowHeight);
+    colorMode(RGB);
+    smooth();
+    background(5);
+
+    buildControlPanel();
+    initUniverse();
+}
+
+function initUniverse() {
+    particles = [];
+
+    // 1. Crear Núcleos autónomos
+    for (let i = 0; i < NUM_NUCLEI; i++) {
+        let nx = width * (i + 1) / (NUM_NUCLEI + 1);
+        let ny = height / 2 + random(-height * 0.15, height * 0.15);
+        particles.push(new Particle(nx, ny, TYPE_NUCLEUS));
+    }
+
+    // 2. Crear Protectores (Azules)
+    for (let i = 0; i < NUM_PROTECTORS; i++) {
+        let angle = random(TWO_PI);
+        let r = random(80, 150);
+        let nx = width / 2 + cos(angle) * r;
+        let ny = height / 2 + sin(angle) * r;
+        particles.push(new Particle(nx, ny, TYPE_PROTECTOR));
+    }
+
+    // 3. Crear Perturbadores (Rojos)
+    for (let i = 0; i < NUM_PERTURBERS; i++) {
+        let pos = spawnEdgePosition();
+        particles.push(new Particle(pos.x, pos.y, TYPE_PERTURBER));
+    }
+}
+
+// ===============================
+// DRAW LOOP
+// ===============================
+
+function draw() {
+    background(5, TRAIL_ALPHA);
+    drawVignette();
+
+    readSpeedSliders();
+    updateMouseNucleus();
+    applyParticleLifeForces();
+    updateAndDrawParticles();
+
+    checkNucleusCollisions();
+    displayExplosionFlashes();
+    displayUI();
+}
+
+// ===============================
+// ALGORITMO PARTICLE LIFE (Núcleo de Física)
+// ===============================
+
+function calculateForce(r, a, rRep, rMax) {
+    if (r < rRep) {
+        // Repulsión nuclear a corta distancia
+        return (r / rRep) - 1.0;
+    } else if (r < rMax) {
+        // Fuerza definida por la matriz a media distancia
+        let mid = (rMax + rRep) / 2;
+        let halfW = (rMax - rRep) / 2;
+        return a * (1 - abs(r - mid) / halfW);
+    }
+    return 0;
+}
+
+function applyParticleLifeForces() {
+    for (let i = 0; i < particles.length; i++) {
+        let p1 = particles[i];
+        if (p1.isMouse) continue; // El núcleo del mouse sigue al cursor
+
+        let fx = 0;
+        let fy = 0;
+
+        for (let j = 0; j < particles.length; j++) {
+            if (i === j) continue;
+            let p2 = particles[j];
+
+            let dx = p2.pos.x - p1.pos.x;
+            let dy = p2.pos.y - p1.pos.y;
+
+            // Envoltura toroidal de coordenadas
+            if (dx > width / 2) dx -= width;
+            else if (dx < -width / 2) dx += width;
+            if (dy > height / 2) dy -= height;
+            else if (dy < -height / 2) dy += height;
+
+            let r = sqrt(dx * dx + dy * dy);
+            let rMax = TYPES[p1.type].rMax;
+
+            if (r > 0 && r < rMax) {
+                let attrCoeff = MATRIX[p1.type][p2.type];
+                let rRep = max(TYPES[p1.type].rRepulsion, TYPES[p2.type].radius * 1.5);
+
+                let force = calculateForce(r, attrCoeff, rRep, rMax);
+
+                fx += (dx / r) * force;
+                fy += (dy / r) * force;
+            }
+        }
+
+        // Aplicar aceleración derivada de Particle Life (idéntico al original)
+        p1.vel.x = (p1.vel.x + fx * FORCE_FACTOR) * FRICTION;
+        p1.vel.y = (p1.vel.y + fy * FORCE_FACTOR) * FRICTION;
+
+        // Control de velocidad por ESCALADO proporcional, no por recorte.
+        // Si el slider está en su valor por defecto, speedRatio = 1 y el
+        // comportamiento es exactamente igual al original (sin sliders).
+        // Mover el slider acelera/frena el movimiento de ese tipo de forma
+        // pareja, sin truncar ni distorsionar el patrón de cerco/repulsión.
+        let speedRatio = TYPES[p1.type].maxSpeed / BASE_MAX_SPEED[p1.type];
+        p1.vel.mult(speedRatio);
+    }
+}
+
+// ===============================
+// ACTUALIZACIÓN Y RENDERIZADO
+// ===============================
+
+function updateAndDrawParticles() {
+    for (let i = particles.length - 1; i >= 0; i--) {
+        let p = particles[i];
+
+        if (!p.isMouse) {
+            p.pos.add(p.vel);
+            p.edges();
+        }
+
+        p.display();
+    }
+}
+
+// ===============================
+// GESTIÓN DEL CLIC COMO NÚCLEO
+// ===============================
+
+function updateMouseNucleus() {
+    let overCanvas = mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height;
+
+    if (mouseIsPressed && overCanvas) {
+        if (!mouseParticle) {
+            mouseParticle = new Particle(mouseX, mouseY, TYPE_NUCLEUS);
+            mouseParticle.isMouse = true;
+            particles.push(mouseParticle);
+        } else {
+            mouseParticle.pos.set(mouseX, mouseY);
+            mouseParticle.vel.mult(0);
+        }
+    } else {
+        removeMouseNucleus();
+    }
+}
+
+function removeMouseNucleus() {
+    if (mouseParticle) {
+        let idx = particles.indexOf(mouseParticle);
+        if (idx !== -1) particles.splice(idx, 1);
+        mouseParticle = null;
+    }
+}
+
+// ===============================
+// DETECCIÓN DE EXPLOSIONES
+// ===============================
+
+function checkNucleusCollisions() {
+    for (let i = particles.length - 1; i >= 0; i--) {
+        let n = particles[i];
+        if (n.type !== TYPE_NUCLEUS) continue;
+
+        let triggeredExplosion = false;
+
+        for (let p of particles) {
+            if (p.type !== TYPE_PROTECTOR) continue;
+
+            let d = p5.Vector.dist(n.pos, p.pos);
+
+            // Se aplica la variable de tolerancia aquí:
+            if (d < (n.radius + p.radius) * EXPLOSION_TOLERANCE) {
+                triggeredExplosion = true;
+                break;
+            }
+        }
+
+        if (triggeredExplosion) {
+            triggerExplosion(n);
+        }
+    }
+}
+
+function triggerExplosion(nucleus) {
+    let pos = nucleus.pos.copy();
+    explosionFlashes.push({ pos: pos, life: 25 });
+
+    let shockwaveRange = 280;
+
+    // Onda de choque: empuja a todas las partículas circundantes
+    for (let p of particles) {
+        if (p === nucleus) continue;
+
+        let dir = p5.Vector.sub(p.pos, pos);
+        let d = dir.mag();
+
+        if (d < shockwaveRange && d > 0) {
+            let force = map(d, 0, shockwaveRange, 18, 2);
+            dir.normalize();
+            dir.mult(force);
+            p.vel.add(dir);
+        }
+    }
+
+    if (nucleus.isMouse) {
+        removeMouseNucleus();
+    } else {
+        // Reaparece el núcleo en el borde
+        let newPos = spawnEdgePosition();
+        nucleus.pos.set(newPos.x, newPos.y);
+        nucleus.vel.mult(0);
+    }
+}
+
+function displayExplosionFlashes() {
+    for (let i = explosionFlashes.length - 1; i >= 0; i--) {
+        let f = explosionFlashes[i];
+        let progress = 1 - f.life / 25;
+        let radius = lerp(20, 300, progress);
+        let alpha = lerp(240, 0, progress);
+
+        noFill();
+        strokeWeight(3);
+        stroke(255, 255, 255, alpha);
+        circle(f.pos.x, f.pos.y, radius);
+
+        strokeWeight(1.5);
+        stroke(130, 210, 255, alpha * 0.6);
+        circle(f.pos.x, f.pos.y, radius * 0.6);
+
+        f.life--;
+        if (f.life <= 0) explosionFlashes.splice(i, 1);
+    }
+}
+
+// ===============================
+// CLASE PARTÍCULA UNIFICADA
+// ===============================
+
+class Particle {
+    constructor(x, y, type) {
+        this.pos = createVector(x, y);
+        this.vel = p5.Vector.random2D().mult(random(0.2, 1.0));
+        this.type = type;
+        this.isMouse = false;
+
+        let t = TYPES[this.type];
+        this.radius = t.radius;
+    }
+
+    display() {
+        let t = TYPES[this.type];
+        let speed = this.vel.mag();
+        let stretch = constrain(speed / max(t.maxSpeed, 0.01), 0, 1.2);
+
+        push();
+        translate(this.pos.x, this.pos.y);
+
+        if (this.type !== TYPE_NUCLEUS) {
+            rotate(this.vel.heading());
+        }
+
+        drawingContext.shadowBlur = 12 + stretch * 10;
+        drawingContext.shadowColor = this.isMouse ? "#ffb74d" : t.glow;
+
+        noStroke();
+        fill(t.color[0], t.color[1], t.color[2], 220);
+
+        if (this.type === TYPE_NUCLEUS) {
+            // Renderizado multicapa de núcleo
+            fill(168, 230, 255, 20);
+            circle(0, 0, this.radius * 4);
+            fill(235, 247, 255, 230);
+            circle(0, 0, this.radius * 2);
+        } else {
+            // Renderizado elíptico según velocidad
+            let w = this.radius * 2 * (1 + stretch * 0.8);
+            let h = this.radius * 2 * (1 - stretch * 0.2);
+            ellipse(0, 0, w, h);
+        }
+
+        pop();
+        drawingContext.shadowBlur = 0;
+    }
+
+    edges() {
+        if (this.pos.x < -20) this.pos.x = width + 20;
+        if (this.pos.x > width + 20) this.pos.x = -20;
+        if (this.pos.y < -20) this.pos.y = height + 20;
+        if (this.pos.y > height + 20) this.pos.y = -20;
+    }
+}
+
+// ===============================
+// UTILERÍAS
+// ===============================
+
+function spawnEdgePosition() {
+    let side = floor(random(4));
+    if (side === 0) return { x: random(width), y: -30 };
+    if (side === 1) return { x: width + 30, y: random(height) };
+    if (side === 2) return { x: random(width), y: height + 30 };
+    return { x: -30, y: random(height) };
+}
+
+function drawVignette() {
+    let grad = drawingContext.createRadialGradient(
+        width / 2, height / 2, height * 0.2,
+        width / 2, height / 2, height * 0.8
+    );
+    grad.addColorStop(0, "rgba(0,0,0,0)");
+    grad.addColorStop(1, "rgba(0,0,0,0.5)");
+    drawingContext.fillStyle = grad;
+    drawingContext.fillRect(0, 0, width, height);
+}
+
+function displayUI() {
+    noStroke();
+    fill(255, 255, 255, 120);
+    textSize(12);
+    textAlign(LEFT, BOTTOM);
+    text("Motor: Particle Life | Mantén el CLIC para activar el Núcleo Atractor", 16, height - 16);
+}
+
+function windowResized() {
+    resizeCanvas(windowWidth - PANEL_WIDTH, windowHeight);
+    repositionControlPanel();
+}
+
+// ===============================
+// PANEL DE CONTROL (creado 100% con p5.dom, sin HTML externo)
+// ===============================
+
+function buildControlPanel() {
+    // Fondo del panel
+    let panelBg = createDiv('');
+    panelBg.id('panelBg');
+    panelBg.style('position', 'fixed');
+    panelBg.style('top', '0');
+    panelBg.style('right', '0');
+    panelBg.style('width', PANEL_WIDTH + 'px');
+    panelBg.style('height', '100vh');
+    panelBg.style('background', 'rgba(10, 16, 22, 0.92)');
+    panelBg.style('border-left', '1px solid rgba(130, 210, 255, 0.18)');
+    panelBg.style('box-sizing', 'border-box');
+    panelBg.style('font-family', "'Courier New', monospace");
+    panelBg.style('z-index', '10');
+    panelBg.style('padding', '20px');
+
+    let title = createDiv('PROTECCIÓN <span style="color:#a8e6ff">vs</span> DESTRUCCIÓN');
+    title.parent(panelBg);
+    title.style('color', '#ebf7ff');
+    title.style('font-size', '15px');
+    title.style('font-weight', 'bold');
+    title.style('margin-bottom', '22px');
+
+    let sectionLabel = createDiv('// VELOCIDAD MÁXIMA');
+    sectionLabel.parent(panelBg);
+    sectionLabel.style('color', '#7d93a3');
+    sectionLabel.style('font-size', '11px');
+    sectionLabel.style('letter-spacing', '0.05em');
+    sectionLabel.style('margin-bottom', '18px');
+
+    const configs = [
+        { type: TYPE_PROTECTOR, label: 'Protector (azul)',    color: '#6ec6ff', min: 0.2, max: 8,   step: 0.1 },
+        { type: TYPE_PERTURBER, label: 'Perturbador (rojo)',  color: '#ff6b6b', min: 0.2, max: 8,   step: 0.1 },
+        { type: TYPE_NUCLEUS,   label: 'Núcleo (blanco)',     color: '#ffffff', min: 0.1, max: 5,   step: 0.1 }
+    ];
+
+    configs.forEach(cfg => {
+        let row = createDiv('');
+        row.parent(panelBg);
+        row.style('margin-bottom', '24px');
+
+        let labelRow = createDiv('');
+        labelRow.parent(row);
+        labelRow.style('display', 'flex');
+        labelRow.style('justify-content', 'space-between');
+        labelRow.style('font-size', '12px');
+        labelRow.style('color', '#cfe4ee');
+        labelRow.style('margin-bottom', '6px');
+
+        let labelText = createSpan(cfg.label);
+        labelText.parent(labelRow);
+
+        let valueText = createSpan(TYPES[cfg.type].maxSpeed.toFixed(1));
+        valueText.parent(labelRow);
+        valueText.style('color', cfg.color);
+        speedValueLabels[cfg.type] = valueText;
+
+        let slider = createSlider(cfg.min, cfg.max, TYPES[cfg.type].maxSpeed, cfg.step);
+        slider.parent(row);
+        slider.style('width', '100%');
+        slider.style('accent-color', cfg.color);
+        speedSliders[cfg.type] = slider;
+    });
+
+    let hint = createDiv('Mantén el CLIC sobre el lienzo para invocar un Núcleo atractor con el mouse.');
+    hint.parent(panelBg);
+    hint.style('color', '#7d93a3');
+    hint.style('font-size', '10px');
+    hint.style('line-height', '1.6');
+    hint.style('margin-top', '10px');
+    hint.style('padding-top', '14px');
+    hint.style('border-top', '1px solid rgba(130, 210, 255, 0.18)');
+}
+
+function repositionControlPanel() {
+    // El panel usa position:fixed, así que no necesita reposicionarse
+    // manualmente al redimensionar la ventana; se deja el hook por si
+    // se agregan elementos con posicionamiento absoluto en el futuro.
+}
+
+function readSpeedSliders() {
+    for (let type = 0; type < TYPES.length; type++) {
+        if (!speedSliders[type]) continue;
+        let v = speedSliders[type].value();
+        TYPES[type].maxSpeed = v;
+        speedValueLabels[type].html(v.toFixed(1));
     }
 }
