@@ -1355,3 +1355,1119 @@ function readSpeedSliders() {
         speedValueLabels[type].html(v.toFixed(1));
     }
 }
+
+## codigo 
+
+/* ===========================================================
+   PROTECCIÓN VS DESTRUCCIÓN
+   Simulación generativa — rediseño de arquitectura de fuerzas
+   p5.js
+
+   PRINCIPIO DE DISEÑO:
+   Nada aquí es una trayectoria. Cada partícula solo conoce:
+   - su posición
+   - la posición de sus vecinas cercanas
+   - unos pocos rasgos individuales (aleatorios al nacer)
+   Todo lo demás (el anillo, las reorganizaciones, el
+   desplazamiento del núcleo) es una CONSECUENCIA de sumar
+   fuerzas locales, no algo que el código decida directamente.
+   =========================================================== */
+
+// ===============================
+// PARÁMETROS GENERALES
+// ===============================
+
+const NUM_NUCLEI = 2;
+const NUM_PROTECTORS = 200;
+const NUM_PERTURBERS = 30;
+
+const PROTECTOR_RADIUS = 5;
+const PERTURBER_RADIUS = 4;
+const NUCLEUS_RADIUS = 18;
+
+const MAX_SPEED_PROTECTOR = 100;
+const MAX_SPEED_PERTURBER = 2.0;
+const MAX_SPEED_NUCLEUS = 1.5;
+
+const FRICTION = 0.93;
+const TRAIL_ALPHA = 8;
+
+// --- Radio ideal del anillo (target de la relación Protector->Núcleo) ---
+// No es el "alcance" de la relación, es la distancia de equilibrio:
+// más lejos que esto, atrae; más cerca, repele.
+const RING_RADIUS_BASE = 125;
+const RING_RADIUS_VARIATION = 18;   // cada protector tiene su propio radio ideal
+
+// --- Deambular (variabilidad orgánica, no aleatoriedad pura) ---
+const WANDER_PROTECTOR = 0.025;
+const WANDER_PERTURBER = 0.045;
+
+// ===============================
+// MATRIZ DE RELACIONES
+// ===============================
+// Una sola tabla: quién siente a quién, con qué tipo de relación
+// (atracción / repulsión / indiferencia / resorte), con qué
+// intensidad (k), hasta qué distancia (range) y con qué tope
+// de fuerza (maxForce). Todas las funciones de comportamiento
+// leen sus números de aquí — nada queda "suelto" en el código.
+//
+//                  siente hacia ->  núcleo              protector            perturbador
+// protector                         resorte (anillo)    repulsión            atracción (persigue)
+// perturbador                       atracción (se acerca) repulsión (huye)   indiferencia
+// núcleo                            —                    repulsión (escapa)  indiferencia
+//
+// range: null en el resorte significa "no tiene límite de alcance,
+// su propio radio ideal (ringRadius) define dónde cambia de signo".
+
+const RELATIONS = {
+
+    protector: {
+        nucleus:   { type: "spring",       k: 0.018, range: null,                              maxForce: 0.12 },
+        protector: { type: "repulsion",    k: 1.1,   range: 46,                                 maxForce: 0.16 },
+        perturber: { type: "attraction",   k: 0.9,   range: 190,                                maxForce: 0.16 }
+    },
+
+    perturber: {
+        nucleus:   { type: "attraction",   k: 0.03,  range: 260,                                maxForce: 0.03 },
+        protector: { type: "repulsion",    k: 1.0,   range: 100,                                maxForce: 0.18 },
+        perturber: { type: "indifference", k: 0,     range: 0,                                  maxForce: 0    }
+    },
+
+    nucleus: {
+        protector: { type: "repulsion",    k: 0.6,   range: RING_RADIUS_BASE + RING_RADIUS_VARIATION + 40, maxForce: 0.4 },
+        perturber: { type: "indifference", k: 0,     range: 0,                                  maxForce: 0    },
+        nucleus:   { type: "indifference", k: 0,     range: 0,                                  maxForce: 0    }
+    }
+
+};
+
+// ===============================
+// VARIABLES GLOBALES
+// ===============================
+
+let nuclei = [];
+let protectors = [];
+let perturbers = [];
+
+// Ritmo de llegada de los perturbadores: no es una trayectoria,
+// es un parámetro poblacional que cambia lentamente en el tiempo.
+// Cuando coincide, varios perturbadores entran por el mismo lado
+// en una ventana corta -> aparece un "enjambre" -> la amenaza
+// sumada (chasePerturbers) produce una salida masiva de guardianes.
+let waveSide = 0;
+let nextWaveChange = 0;
+
+// ===============================
+// INTERACCIÓN DEL OBSERVADOR
+// ===============================
+// El cursor, mientras se mantiene presionado dentro del lienzo, se
+// comporta como UN PERTURBADOR MÁS: entra en la misma lista que
+// revisan los protectores para sentir amenazas (RELATIONS.protector.
+// perturber). No es un modo especial ni una fuerza nueva: es la
+// misma regla que ya gobierna a los perturbadores autónomos,
+// aplicada también a la posición del mouse.
+//
+// La única diferencia es su "peso": crece mientras más tiempo se
+// sostiene el clic (hasta un tope), así que sostener la intervención
+// es lo que provoca la escalada de sobre-reacción — el propio
+// observador puede desencadenar en vivo la paradoja del sistema.
+let mouseHoldFrames = 0;
+let activeThreats = [];
+
+// ===============================
+// SETUP
+// ===============================
+
+function setup() {
+
+    createCanvas(windowWidth, windowHeight);
+    colorMode(RGB);
+    smooth();
+    background(5);
+
+    // El alcance de "Perturbador -> Núcleo" depende del tamaño real
+    // de la pantalla (se conoce recién aquí). Se fija para cubrir
+    // todo el lienzo con margen: sigue siendo un alcance finito y
+    // dependiente de la distancia, no una atracción infinita.
+    RELATIONS.perturber.nucleus.range = dist(0, 0, width, height) + 100;
+
+    // Dos núcleos, separados horizontalmente con algo de variación
+    // vertical -> desde el primer frame se ven como dos entidades
+    // distintas, no una encima de la otra.
+    nuclei = [];
+    for (let i = 0; i < NUM_NUCLEI; i++) {
+
+        let nx = width * (i + 1) / (NUM_NUCLEI + 1);
+        let ny = height / 2 + random(-height * 0.15, height * 0.15);
+
+        nuclei.push(new Nucleus(nx, ny));
+
+    }
+
+    waveSide = floor(random(4));
+    nextWaveChange = floor(random(240, 540));
+
+    // Protectores: se reparten en partes iguales entre los núcleos
+    // (no es una asignación permanente: en applyBehaviors() cada uno
+    // sigue eligiendo, frame a frame, cuál núcleo tiene más cerca).
+    // Nacen ya distribuidos cerca de su propio radio ideal, para que
+    // el anillo sea visible desde el primer frame.
+    for (let i = 0; i < NUM_PROTECTORS; i++) {
+
+        let home = nuclei[i % nuclei.length];
+
+        let angle = random(TWO_PI);
+        let ringR = RING_RADIUS_BASE + random(-RING_RADIUS_VARIATION, RING_RADIUS_VARIATION);
+
+        let x = home.position.x + cos(angle) * ringR;
+        let y = home.position.y + sin(angle) * ringR;
+
+        protectors.push(new Particle(x, y, "protector", ringR));
+
+    }
+
+    // Perturbadores: entran desde los bordes.
+    for (let i = 0; i < NUM_PERTURBERS; i++) {
+
+        let pos = spawnEdgePosition();
+        perturbers.push(new Particle(pos.x, pos.y, "perturber"));
+
+    }
+
+}
+
+// ===============================
+// DRAW
+// ===============================
+
+function draw() {
+
+    background(5, TRAIL_ALPHA);
+    drawVignette();
+
+    updateWave();
+    updateCursorThreat();
+
+    for (let n of nuclei) {
+        n.update();
+        n.display();
+    }
+
+    for (let p of protectors) {
+        p.applyBehaviors();
+        p.update();
+        p.display();
+    }
+
+    for (let p of perturbers) {
+        p.applyBehaviors();
+        p.update();
+        p.display();
+    }
+
+    checkRingClosure();
+    displayExplosionFlash();
+
+    displayCursorThreat();
+    displayHint();
+
+}
+
+// ------------------------------------------------
+// Actualiza la lista de amenazas que sienten los protectores.
+// Si el cursor está activo, se agrega como una amenaza más,
+// con un peso que crece mientras más tiempo se sostiene el clic.
+// ------------------------------------------------
+
+function updateCursorThreat() {
+
+    let overCanvas = mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height;
+    let pressed = mouseIsPressed && overCanvas;
+
+    activeThreats = perturbers;
+
+    if (pressed) {
+
+        mouseHoldFrames++;
+
+        // El peso crece con la duración sostenida del clic (satura en 2.5x).
+        let weight = constrain(1 + mouseHoldFrames / 45, 1, 2.5);
+
+        activeThreats = perturbers.concat([{
+            position: createVector(mouseX, mouseY),
+            weight: weight
+        }]);
+
+    } else {
+
+        mouseHoldFrames = 0;
+
+    }
+
+}
+
+// ------------------------------------------------
+// Indicador visual del cursor cuando actúa como amenaza.
+// Su tamaño y brillo reflejan el mismo peso que usan los
+// protectores para reaccionar: lo que se ve es lo que se siente.
+// ------------------------------------------------
+
+function displayCursorThreat() {
+
+    if (activeThreats.length === perturbers.length) return; // cursor inactivo
+
+    let cursor = activeThreats[activeThreats.length - 1];
+    let x = cursor.position.x;
+    let y = cursor.position.y;
+
+    drawingContext.shadowBlur = 20;
+    drawingContext.shadowColor = "#ff7043";
+    noStroke();
+
+    fill(255, 150, 110, 70);
+    circle(x, y, 26);
+    fill(255, 150, 110, 210);
+    circle(x, y, 13);
+
+    drawingContext.shadowBlur = 0;
+
+    // Anillos tipo sonar: la CANTIDAD y el radio escalan con
+    // cursor.weight (el mismo número que usa chasePerturbers()).
+    // Más anillos visibles = más amenaza real está sintiendo el
+    // sistema en ese instante, no una decoración fija.
+    let ringCount = floor(map(cursor.weight, 1, 2.5, 1, 4));
+
+    for (let i = 0; i < ringCount; i++) {
+
+        let phase = (frameCount * 1.5 + i * 40) % 140;
+        let alpha = map(phase, 0, 140, 90, 0);
+
+        noFill();
+        strokeWeight(1.5);
+        stroke(255, 140, 110, alpha);
+        circle(x, y, 20 + phase);
+
+    }
+
+}
+
+// ------------------------------------------------
+// Pista mínima de uso, discreta, en la esquina.
+// ------------------------------------------------
+
+function displayHint() {
+
+    noStroke();
+    fill(255, 255, 255, 70);
+    textSize(13);
+    textAlign(LEFT, BOTTOM);
+    text("mantén clic para intervenir como amenaza", 16, height - 16);
+
+}
+
+// ------------------------------------------------
+// Viñeta de fondo: puramente decorativa (profundidad visual),
+// no representa ninguna variable del sistema. Se redibuja
+// completa cada frame -> no se acumula con las estelas.
+// ------------------------------------------------
+
+function drawVignette() {
+
+    let grad = drawingContext.createRadialGradient(
+        width / 2, height / 2, height * 0.15,
+        width / 2, height / 2, height * 0.75
+    );
+
+    grad.addColorStop(0, "rgba(0,0,0,0)");
+    grad.addColorStop(1, "rgba(0,0,0,0.4)");
+
+    drawingContext.fillStyle = grad;
+    drawingContext.fillRect(0, 0, width, height);
+
+}
+
+function windowResized() {
+    resizeCanvas(windowWidth, windowHeight);
+    RELATIONS.perturber.nucleus.range = dist(0, 0, width, height) + 100;
+}
+
+// ------------------------------------------------
+// Distancia toroidal: la pantalla envuelve, así que el camino
+// más corto entre dos puntos a veces cruza un borde. Sin esto,
+// cuando el núcleo esté a punto de cruzar, los protectores del
+// lado opuesto lo verían "lejísimos" en línea recta en vez de
+// "cerquita" por el lado corto, y tirarían en la dirección
+// equivocada. Toda fuerza que dependa de distancia usa esto.
+// ------------------------------------------------
+
+function wrapDelta(fromX, fromY, toX, toY) {
+
+    let dx = toX - fromX;
+    let dy = toY - fromY;
+
+    if (dx > width / 2) dx -= width;
+    else if (dx < -width / 2) dx += width;
+
+    if (dy > height / 2) dy -= height;
+    else if (dy < -height / 2) dy += height;
+
+    return createVector(dx, dy);
+
+}
+
+// ------------------------------------------------
+// Con más de un núcleo, cada protector/perturbador debe decidir
+// dinámicamente cuál le queda más cerca -- no es una asignación
+// fija al nacer, así que si un núcleo se reubica (tras explotar),
+// las partículas pueden "cambiar de bando" de forma natural.
+// ------------------------------------------------
+
+function nearestNucleus(x, y) {
+
+    let best = null;
+    let bestD = Infinity;
+
+    for (let n of nuclei) {
+
+        let d = wrapDelta(x, y, n.position.x, n.position.y).mag();
+
+        if (d < bestD) {
+            bestD = d;
+            best = n;
+        }
+
+    }
+
+    return best;
+
+}
+
+// ===============================
+// CIERRE DEL ANILLO -> EXPLOSIÓN -> NUEVO NÚCLEO
+// ===============================
+// Cada núcleo mide su propio estado (qué tan cerrado está SU
+// anillo) y reacciona cuando cruza un umbral, de forma
+// independiente del otro núcleo. No es una trayectoria: ningún
+// individuo sabe que existe este mecanismo, solo se mide una
+// propiedad colectiva emergente (cobertura angular alrededor de
+// ESE núcleo) y se dispara una consecuencia física (un impulso
+// con caída por distancia), no una animación con posiciones
+// fijadas a mano.
+//
+// Es, además, la versión más literal de la contradicción: el
+// momento en que la protección finalmente logra su objetivo —
+// rodear por completo a un núcleo— es el mismo momento en que
+// lo destruye.
+
+const RING_CLOSE_THRESHOLD = 0.9;   // fracción de cobertura angular requerida (90%)
+const RING_CLOSE_HOLD_FRAMES = 40;  // debe sostenerse ~2/3 de segundo, no ser un parpadeo
+const SHOCKWAVE_RANGE = RING_RADIUS_BASE + RING_RADIUS_VARIATION + 150;
+
+let explosionFlashes = [];
+
+// Fracción de "anillo cerrado" alrededor de un núcleo específico:
+// 1.0 = cobertura angular perfecta, 0.0 = hueco de 360°. Solo
+// cuentan los protectores cuyo núcleo más cercano es ESTE núcleo,
+// para que la medición no se contamine con el anillo del otro.
+function ringClosureFraction(target) {
+
+    let bandMin = RING_RADIUS_BASE - RING_RADIUS_VARIATION - 25;
+    let bandMax = RING_RADIUS_BASE + RING_RADIUS_VARIATION + 25;
+
+    let angles = [];
+    let associated = 0;
+
+    for (let p of protectors) {
+
+        if (nearestNucleus(p.position.x, p.position.y) !== target) continue;
+        associated++;
+
+        let rel = wrapDelta(target.position.x, target.position.y, p.position.x, p.position.y);
+        let d = rel.mag();
+
+        if (d > bandMin && d < bandMax) {
+            angles.push(atan2(rel.y, rel.x));
+        }
+
+    }
+
+    if (associated === 0) return 0;
+
+    // Si muy pocos de los protectores de ESTE núcleo están en la
+    // banda del anillo (dispersos o persiguiendo), no cuenta como cerrado.
+    if (angles.length < associated * 0.55) return 0;
+
+    angles.sort((a, b) => a - b);
+
+    let maxGap = 0;
+
+    for (let i = 0; i < angles.length; i++) {
+
+        let next = (i + 1 < angles.length) ? angles[i + 1] : angles[0] + TWO_PI;
+        let gap = next - angles[i];
+
+        if (gap > maxGap) maxGap = gap;
+
+    }
+
+    return 1 - maxGap / TWO_PI;
+
+}
+
+function checkRingClosure() {
+
+    for (let n of nuclei) {
+
+        if (ringClosureFraction(n) > RING_CLOSE_THRESHOLD) {
+            n.ringClosedFrames++;
+        } else {
+            n.ringClosedFrames = 0;
+        }
+
+        if (n.ringClosedFrames > RING_CLOSE_HOLD_FRAMES) {
+            triggerExplosion(n);
+            n.ringClosedFrames = 0;
+        }
+
+    }
+
+}
+
+function triggerExplosion(n) {
+
+    let pos = createVector(n.position.x, n.position.y);
+    explosionFlashes.push({ pos: pos, life: 26 });
+
+    // Impulso radial real de velocidad (física, no teletransporte),
+    // con caída según la distancia: solo empuja a lo que estaba
+    // cerca de ESTE núcleo, así el anillo del otro núcleo no se ve
+    // afectado por una explosión que no le pertenece.
+    for (let p of protectors.concat(perturbers)) {
+
+        let toParticle = wrapDelta(pos.x, pos.y, p.position.x, p.position.y);
+        let d = toParticle.mag();
+
+        if (d > SHOCKWAVE_RANGE) continue;
+
+        let strength = map(d, 0, SHOCKWAVE_RANGE, 11, 2);
+        let dir = (d < 0.01) ? p5.Vector.random2D() : toParticle.normalize();
+
+        dir.mult(strength);
+
+        p.velocity.add(dir);
+        p.speedBoost = random(3, 5);
+
+    }
+
+    // El núcleo reaparece por un borde, igual que un perturbador.
+    let newPos = spawnEdgePosition();
+    n.position.set(newPos.x, newPos.y);
+    n.velocity.mult(0);
+    n.stability = 100;
+
+}
+
+function displayExplosionFlash() {
+
+    for (let i = explosionFlashes.length - 1; i >= 0; i--) {
+
+        let f = explosionFlashes[i];
+        let progress = 1 - f.life / 26;
+        let radius = lerp(20, 320, progress);
+        let alpha = lerp(220, 0, progress);
+
+        noFill();
+        strokeWeight(3);
+        stroke(255, 255, 255, alpha);
+        circle(f.pos.x, f.pos.y, radius);
+
+        strokeWeight(2);
+        stroke(255, 210, 170, alpha * 0.7);
+        circle(f.pos.x, f.pos.y, radius * 0.6);
+
+        f.life--;
+        if (f.life <= 0) explosionFlashes.splice(i, 1);
+
+    }
+
+}
+
+// Cada cierto tiempo (variable, ~4-9s) cambia el lado de la racha.
+function updateWave() {
+
+    if (frameCount > nextWaveChange) {
+        waveSide = floor(random(4));
+        nextWaveChange = frameCount + floor(random(240, 540));
+    }
+
+}
+
+// 65% de las veces respeta la racha (llegan agrupados),
+// 35% entra por un lado totalmente aleatorio (sigue habiendo
+// variabilidad, no todo colapsa a un único patrón).
+function spawnEdgePosition() {
+
+    let side = (random() < 0.65) ? waveSide : floor(random(4));
+    let x, y;
+
+    if (side == 0) { x = random(width); y = -40; }
+    else if (side == 1) { x = width + 40; y = random(height); }
+    else if (side == 2) { x = random(width); y = height + 40; }
+    else { x = -40; y = random(height); }
+
+    return { x, y };
+
+}
+
+//parte 2A-1
+
+class Particle {
+
+    constructor(x, y, type, ringR) {
+
+        this.type = type;
+        this.position = createVector(x, y);
+
+        this.velocity = p5.Vector.random2D();
+        this.velocity.mult(random(0.3, 1.2));
+
+        this.acceleration = createVector();
+
+        // Multiplicador temporal de velocidad máxima. Normalmente 1
+        // (sin efecto). Una explosión lo sube de golpe y decae solo,
+        // volviendo a la normalidad — así el impulso de la explosión
+        // no queda anulado al instante por el límite de velocidad.
+        this.speedBoost = 1;
+
+        // Rasgo individual: escala global de intensidad de sus fuerzas.
+        // Es la fuente principal de variabilidad entre partículas y
+        // entre ejecuciones (no afecta a UNA fuerza, afecta a todas).
+        this.forceScale = random(0.8, 1.25);
+
+        // Rasgo individual de tamaño, correlacionado a propósito con
+        // forceScale (no es independiente ni azar decorativo): una
+        // partícula que actúa con más intensidad también ocupa un
+        // poco más de espacio visual. Es la misma variabilidad,
+        // solo que ahora también se puede VER, no solo simular.
+        this.sizeTrait = map(this.forceScale, 0.8, 1.25, 0.85, 1.25);
+
+        // Deambular orgánico (ruido Perlin, no ruido puro)
+        this.noiseOffX = random(1000);
+        this.noiseOffY = random(2000);
+
+        if (type === "protector") {
+
+            this.maxSpeed = MAX_SPEED_PROTECTOR * random(0.85, 1.2);
+            this.radius = PROTECTOR_RADIUS;
+
+            // Radio ideal individual respecto al núcleo -> genera el anillo.
+            this.ringRadius = ringR;
+
+            // Vigilancia: rasgo continuo, sesgado para que la mayoría
+            // reaccione poco y solo unos pocos reaccionen mucho.
+            // No es un interruptor fijo: se combina con la distancia
+            // real al perturbador en cada frame.
+            this.vigilance = pow(random(), 2);
+
+        } else {
+
+            this.maxSpeed = MAX_SPEED_PERTURBER * random(0.85, 1.15);
+            this.radius = PERTURBER_RADIUS;
+
+        }
+
+    }
+
+    applyForce(force) {
+        this.acceleration.add(force);
+    }
+
+    // ------------------------------------------------
+
+    applyBehaviors() {
+
+        let total = createVector();
+
+        if (this.type === "protector") {
+
+            total.add(this.ringForce());
+            total.add(this.repelProtectors());
+            total.add(this.chasePerturbers());
+            total.add(this.wander(WANDER_PROTECTOR));
+
+        } else {
+
+            // Relación Perturbador <-> Perturbador: INDIFERENCIA.
+            // Es intencional que no exista ninguna fuerza entre ellos:
+            // no se atraen, no se repelen, no se "ven" entre sí.
+            // Cada perturbador solo le importa su relación con el
+            // núcleo (atracción) y con los protectores (huida).
+
+            total.add(this.approachNucleus());
+            total.add(this.fleeProtectors());
+            total.add(this.wander(WANDER_PERTURBER));
+
+        }
+
+        // El rasgo individual escala TODO el comportamiento de la partícula,
+        // no una fuerza aislada: así cada una "actúa distinto" de forma coherente.
+        total.mult(this.forceScale);
+
+        this.applyForce(total);
+
+    }
+
+    // ------------------------------------------------
+    // Resorte hacia la distancia ideal respecto al núcleo.
+    // Único origen del anillo. Atrae si está lejos, repele si está cerca.
+    // ------------------------------------------------
+
+    ringForce() {
+
+        let rel = RELATIONS.protector.nucleus;
+        let target = nearestNucleus(this.position.x, this.position.y);
+
+        if (!target) return createVector();
+
+        let toNucleus = wrapDelta(this.position.x, this.position.y, target.position.x, target.position.y);
+        let d = toNucleus.mag();
+
+        if (d < 0.001) return createVector();
+
+        let dir = toNucleus.div(d);
+        let offset = d - this.ringRadius;
+
+        let mag = constrain(offset * rel.k, -rel.maxForce, rel.maxForce);
+
+        return dir.mult(mag);
+
+    }
+
+    // ------------------------------------------------
+    // Repulsión entre protectores (misma población).
+    // Caída suave dentro del rango: evita saltos bruscos de fuerza.
+    // ------------------------------------------------
+
+    repelProtectors() {
+
+        let rel = RELATIONS.protector.protector;
+        let steering = createVector();
+
+        for (let other of protectors) {
+
+            if (other === this) continue;
+
+            let diff = wrapDelta(other.position.x, other.position.y, this.position.x, this.position.y);
+            let d = diff.mag();
+
+            if (d > 0.001 && d < rel.range) {
+
+                let strength = rel.k * (1 - d / rel.range);
+                diff.normalize();
+                diff.mult(strength);
+                steering.add(diff);
+
+            }
+
+        }
+
+        steering.limit(rel.maxForce);
+        return steering;
+
+    }
+
+    // ------------------------------------------------
+    // Reaccionar ante los perturbadores cercanos.
+    // Intensidad = vigilancia individual x (suma de amenaza de TODOS
+    // los perturbadores dentro de rango, no solo el más cercano).
+    // Esto es lo que produce la "reacción exagerada": un solo intruso
+    // genera una respuesta moderada, pero varios juntos generan una
+    // respuesta desproporcionada — la sobre-reacción emerge de sumar
+    // amenazas locales, no de una regla que diga "si hay muchos, reacciona más".
+    // Nadie está "marcado" como guardián de por vida: reacciona quien
+    // tiene el rasgo y además siente amenaza real en ese instante.
+    // ------------------------------------------------
+
+    // ------------------------------------------------
+    // Reaccionar ante las amenazas cercanas (perturbadores autónomos
+    // Y, si el observador lo activa, el cursor). Intensidad =
+    // vigilancia individual x (suma ponderada de amenaza de TODAS
+    // las fuentes dentro de rango, no solo la más cercana).
+    // Esto es lo que produce la "reacción exagerada": una sola
+    // amenaza genera una respuesta moderada, pero varias juntas -o
+    // una sostenida por el usuario, cuyo peso crece con el tiempo-
+    // generan una respuesta desproporcionada. La sobre-reacción
+    // emerge de sumar amenazas locales, no de una regla que diga
+    // "si hay muchas, reacciona más". Nadie está "marcado" como
+    // guardián de por vida: reacciona quien tiene el rasgo y además
+    // siente amenaza real en ese instante — sea del sistema o del
+    // observador.
+    // ------------------------------------------------
+
+    chasePerturbers() {
+
+        let rel = RELATIONS.protector.perturber;
+        let threat = createVector();
+
+        for (let p of activeThreats) {
+
+            let diff = wrapDelta(this.position.x, this.position.y, p.position.x, p.position.y);
+            let d = diff.mag();
+
+            if (d > 0.001 && d < rel.range) {
+
+                let closeness = (1 - d / rel.range) * (p.weight || 1);
+                diff.normalize();
+                diff.mult(closeness);
+                threat.add(diff);
+
+            }
+
+        }
+
+        if (threat.magSq() < 0.0000001) return createVector();
+
+        threat.mult(rel.k * this.vigilance);
+        threat.limit(rel.maxForce);
+
+        return threat;
+
+    }
+
+    // ------------------------------------------------
+    // Huir de los protectores cercanos.
+    // ------------------------------------------------
+
+    fleeProtectors() {
+
+        let rel = RELATIONS.perturber.protector;
+        let steering = createVector();
+
+        for (let p of protectors) {
+
+            let diff = wrapDelta(p.position.x, p.position.y, this.position.x, this.position.y);
+            let d = diff.mag();
+
+            if (d > 0.001 && d < rel.range) {
+
+                let strength = rel.k * (1 - d / rel.range);
+                diff.normalize();
+                diff.mult(strength);
+                steering.add(diff);
+
+            }
+
+        }
+
+        steering.limit(rel.maxForce);
+        return steering;
+
+    }
+
+    // ------------------------------------------------
+    // Atracción débil y constante hacia el núcleo.
+    // No busca destruir: solo acercarse. Esta es la pieza
+    // que en el código original no existía.
+    // Antes esta fuerza no tenía límite de alcance (atraía sin
+    // importar la distancia); ahora, como todas las demás
+    // relaciones, se apaga fuera de su rango.
+    // ------------------------------------------------
+
+    approachNucleus() {
+
+        let rel = RELATIONS.perturber.nucleus;
+        let target = nearestNucleus(this.position.x, this.position.y);
+
+        if (!target) return createVector();
+
+        let dir = wrapDelta(this.position.x, this.position.y, target.position.x, target.position.y);
+        let d = dir.mag();
+        if (d < 0.001 || d > rel.range) return createVector();
+
+        let closeness = 1 - d / rel.range;
+
+        dir.normalize();
+        dir.mult(rel.k * closeness);
+        dir.limit(rel.maxForce);
+
+        return dir;
+
+    }
+
+    // ------------------------------------------------
+    // Deambular orgánico basado en ruido Perlin individual.
+    // Aporta variabilidad continua sin ser una trayectoria fija.
+    // ------------------------------------------------
+
+    wander(strength) {
+
+        let angle = noise(this.noiseOffX, frameCount * 0.005) * TWO_PI * 2;
+        let force = p5.Vector.fromAngle(angle);
+        force.mult(strength);
+
+        return force;
+
+    }
+
+    // ------------------------------------------------
+
+    respawn() {
+
+        let pos = spawnEdgePosition();
+        this.position.set(pos.x, pos.y);
+        this.velocity = p5.Vector.random2D();
+
+    }
+
+    // ------------------------------------------------
+
+    update() {
+
+        this.velocity.add(this.acceleration);
+        this.velocity.limit(this.maxSpeed * this.speedBoost);
+        this.velocity.mult(FRICTION);
+
+        this.speedBoost = lerp(this.speedBoost, 1, 0.05);
+
+        this.position.add(this.velocity);
+        this.acceleration.mult(0);
+
+        this.edges();
+
+        if (this.type === "perturber") {
+
+            if (
+                this.position.x < -80 || this.position.x > width + 80 ||
+                this.position.y < -80 || this.position.y > height + 80
+            ) {
+                this.respawn();
+            }
+
+        }
+
+    }
+
+    // ------------------------------------------------
+
+    edges() {
+
+        if (this.type === "protector") {
+
+            if (this.position.x < -50) this.position.x = width + 50;
+            if (this.position.x > width + 50) this.position.x = -50;
+            if (this.position.y < -50) this.position.y = height + 50;
+            if (this.position.y > height + 50) this.position.y = -50;
+
+        }
+
+    }
+
+    // ------------------------------------------------
+    // Identidad visual por población (esto NO es la contradicción,
+    // solo distingue "quién es quién" — igual en toda ejecución).
+    //
+    // Dos decisiones de apariencia, ambas ancladas a datos reales
+    // del sistema (no a símbolos inventados):
+    //
+    // 1) El cuerpo se ESTIRA en la dirección de su velocidad real.
+    //    Seleccioné elongar según this.velocity porque quiero hacer
+    //    perceptible que la posición, velocidad y aceleración no son
+    //    solo variables internas sino lo que literalmente dibuja la
+    //    escena. Espero que produzca una sensación de urgencia en los
+    //    guardianes que rompen filas (se ven "lanzados") y de calma
+    //    en los que orbitan estables (se ven casi circulares).
+    //
+    // 2) El tamaño varía levemente según this.sizeTrait (rasgo
+    //    individual fijado al nacer). Seleccioné esto porque quiero
+    //    hacer perceptible la variabilidad entre individuos (no todos
+    //    los protectores son idénticos). Espero que produzca una
+    //    sensación de multitud heterogénea, no de un patrón repetido.
+    // ------------------------------------------------
+
+    display() {
+
+        let speed = this.velocity.mag();
+        let stretch = constrain(speed / this.maxSpeed, 0, 1);
+        let heading = this.velocity.heading();
+
+        let r, g, b, glow;
+
+        if (this.type === "protector") {
+            r = 130; g = 210; b = 255;
+            glow = "#6ec6ff";
+        } else {
+            r = 255; g = 70; b = 70;
+            glow = "#ff4d4d";
+        }
+
+        push();
+        translate(this.position.x, this.position.y);
+        rotate(heading);
+
+        let w = this.radius * 2 * this.sizeTrait * (1 + stretch * 1.4);
+        let h = this.radius * 2 * this.sizeTrait * (1 - stretch * 0.15);
+
+        drawingContext.shadowBlur = 14 + stretch * 14;
+        drawingContext.shadowColor = glow;
+        noStroke();
+
+        // Halo suave (capa grande, muy transparente)
+        fill(r, g, b, 55);
+        ellipse(0, 0, w * 1.7, h * 1.7);
+
+        // Cuerpo (capa pequeña, opaca)
+        fill(r, g, b, 220);
+        ellipse(0, 0, w, h);
+
+        pop();
+        drawingContext.shadowBlur = 0;
+
+    }
+
+}
+
+// =====================================================
+// NÚCLEO
+// No decide nada. Solo recibe fuerzas y reacciona.
+// =====================================================
+
+class Nucleus {
+
+    constructor(x, y) {
+
+        this.position = createVector(x, y);
+        this.velocity = createVector();
+        this.acceleration = createVector();
+
+        this.maxSpeed = MAX_SPEED_NUCLEUS;
+        this.radius = NUCLEUS_RADIUS;
+
+        // Métrica interna. No se usa para cambiar su apariencia:
+        // la única evidencia visible del daño es su desplazamiento
+        // y su rastro, no un color ni un símbolo.
+        this.stability = 100;
+
+        // Cuántos frames seguidos lleva SU anillo cerrado por
+        // encima del umbral (ver checkRingClosure). Cada núcleo
+        // lleva la cuenta de forma independiente.
+        this.ringClosedFrames = 0;
+
+    }
+
+    applyForce(force) {
+        this.acceleration.add(force);
+    }
+
+    update() {
+
+        this.receivePressure();
+
+        this.velocity.add(this.acceleration);
+        this.velocity.limit(this.maxSpeed);
+        this.velocity.mult(0.99);
+
+        this.position.add(this.velocity);
+        this.acceleration.mult(0);
+
+        this.edges();
+
+    }
+
+    // ------------------------------------------------
+    // Igual que protectores y perturbadores: si cruza un borde,
+    // reaparece por el lado opuesto. El núcleo no es una excepción
+    // encerrada en el lienzo, es una partícula más del sistema.
+    // ------------------------------------------------
+
+    edges() {
+
+        if (this.position.x < -this.radius) this.position.x = width + this.radius;
+        if (this.position.x > width + this.radius) this.position.x = -this.radius;
+        if (this.position.y < -this.radius) this.position.y = height + this.radius;
+        if (this.position.y > height + this.radius) this.position.y = -this.radius;
+
+    }
+
+    // ------------------------------------------------
+    // La presión de los protectores termina desplazando al núcleo.
+    // Caída suave con la distancia, sin corte duro.
+    // ------------------------------------------------
+
+    receivePressure() {
+
+        let rel = RELATIONS.nucleus.protector;
+        let pressure = createVector();
+        let total = 0;
+
+        for (let p of protectors) {
+
+            let diff = wrapDelta(p.position.x, p.position.y, this.position.x, this.position.y);
+            let d = diff.mag();
+
+            if (d > 0.001 && d < rel.range) {
+
+                let strength = rel.k * (1 - d / rel.range);
+                diff.normalize();
+                diff.mult(strength);
+                pressure.add(diff);
+                total++;
+
+            }
+
+        }
+
+        if (total > 0) {
+
+            pressure.limit(rel.maxForce);
+            this.applyForce(pressure);
+            this.stability -= total * 0.03;
+
+        } else {
+
+            this.stability += 0.03;
+
+        }
+
+        this.stability = constrain(this.stability, 0, 100);
+
+    }
+
+    // ------------------------------------------------
+    // Apariencia fija en color e intensidad — a propósito no varía
+    // con this.stability. La historia del daño la cuenta el
+    // movimiento y el rastro que deja, no un cambio visual directo.
+    // Lo único que cambia aquí es que el render tiene más capas de
+    // luz (más "vistoso"), pero ninguna capa codifica un estado.
+    // ------------------------------------------------
+
+    display() {
+
+        let x = this.position.x;
+        let y = this.position.y;
+
+        noStroke();
+
+        // Halo exterior amplio y suave (profundidad, no información)
+        fill(168, 230, 255, 14);
+        circle(x, y, this.radius * 9);
+        fill(168, 230, 255, 24);
+        circle(x, y, this.radius * 6);
+        fill(200, 235, 255, 45);
+        circle(x, y, this.radius * 3.2);
+
+        // Cuerpo (capa opaca, con brillo)
+        drawingContext.shadowBlur = 24;
+        drawingContext.shadowColor = "#a8e6ff";
+        fill(235, 247, 255);
+        circle(x, y, this.radius * 2);
+        drawingContext.shadowBlur = 0;
+
+        // Anillo fino de contorno (referencia de escala, no un medidor)
+        noFill();
+        stroke(210, 235, 255, 35);
+        strokeWeight(1.5);
+        circle(x, y, this.radius * 3.5);
+
+    }
+
+}
