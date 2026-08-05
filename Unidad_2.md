@@ -18,8 +18,10 @@ Visualmente funcionaba, pero al observar la simulación me di cuenta de que real
 Parecía más una simulación de seguimiento que un sistema generativo.
 
 
-<img width="1238" height="1094" alt="image" src="https://github.com/user-attachments/assets/fd4531cc-ddcd-4fb5-bb95-36fba672bec7" />
+
 ## Primeros problemas encontrados
+
+<img width="1238" height="1094" alt="image" src="https://github.com/user-attachments/assets/fd4531cc-ddcd-4fb5-bb95-36fba672bec7" />
 
 Durante las primeras pruebas aparecieron varios problemas.
 
