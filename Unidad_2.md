@@ -5,6 +5,8 @@ Mi primera idea era que existiera un núcleo que debía ser protegido y un grupo
 
 ## Primera versión
 
+<img width="1242" height="1096" alt="image" src="https://github.com/user-attachments/assets/e48bbd58-c7c2-48b7-8ab5-3a513dd3bf5f" />
+
 La primera versión era bastante sencilla.
 
 Había un núcleo en el centro, un grupo de protectores que lo seguían constantemente y unos perturbadores que aparecían desde los bordes.
@@ -15,6 +17,8 @@ Visualmente funcionaba, pero al observar la simulación me di cuenta de que real
 
 Parecía más una simulación de seguimiento que un sistema generativo.
 
+
+<img width="1238" height="1094" alt="image" src="https://github.com/user-attachments/assets/fd4531cc-ddcd-4fb5-bb95-36fba672bec7" />
 ## Primeros problemas encontrados
 
 Durante las primeras pruebas aparecieron varios problemas.
@@ -106,7 +110,7 @@ También descarté utilizar trayectorias programadas manualmente porque el objet
 
 Otra idea descartada fue controlar completamente las explosiones mediante temporizadores. Finalmente preferí que aparecieran como consecuencia del estado del sistema y de las reglas establecidas.
 
-<img width="1242" height="1096" alt="image" src="https://github.com/user-attachments/assets/e48bbd58-c7c2-48b7-8ab5-3a513dd3bf5f" />
-<img width="1238" height="1094" alt="image" src="https://github.com/user-attachments/assets/fd4531cc-ddcd-4fb5-bb95-36fba672bec7" />
+
+
 <img width="1239" height="1093" alt="image" src="https://github.com/user-attachments/assets/7cb7766a-33ea-4bb9-9d9b-a47c629a7622" />
 
