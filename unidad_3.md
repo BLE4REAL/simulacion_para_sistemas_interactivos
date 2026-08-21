@@ -19,8 +19,6 @@ http://localhost:5173
 >
 > Identifica también qué partes fueron diseñadas para experimentar en LAB y cuáles forman parte de la ejecución principal. Después señala cuáles serían los puntos adecuados para introducir una nueva fuerza sin reescribir innecesariamente la arquitectura existente.
 
-**Decisión:** este prompt fue importante porque permitió priorizar la comprensión del sistema antes de pedir cambios a la IA.
-
 ---
 
 ## 2. Diseñar una fuerza a partir de una intención
@@ -33,8 +31,6 @@ http://localhost:5173
 >
 > Antes de combinarla con otras fuerzas, quiero poder aislarla y probarla individualmente.
 
-**Decisión:** se priorizó que la intención artística pudiera relacionarse directamente con una propiedad física del sistema.
-
 ---
 
 ## 3. Formular una predicción antes de experimentar
@@ -45,8 +41,6 @@ http://localhost:5173
 >
 > Después implementa únicamente la modificación necesaria para probar esa hipótesis y compara el comportamiento observado con la predicción inicial.
 
-**Decisión:** este prompt permitió convertir la implementación en un experimento verificable.
-
 ---
 
 ## 4. Probar deliberadamente el signo de una fuerza
@@ -56,8 +50,6 @@ http://localhost:5173
 > Antes de ejecutar, explica qué comportamiento esperas con el signo original y qué comportamiento debería aparecer con el signo invertido.
 >
 > Después compara ambos resultados y explica por qué el comportamiento cambia. No te limites a describir visualmente el resultado; relaciónalo con la dirección del vector de fuerza y con la actualización de velocidad y posición.
-
-**Decisión:** esta prueba permite demostrar que el efecto visual está relacionado con la lógica matemática de la fuerza y no con una animación arbitraria.
 
 ---
 
@@ -70,9 +62,6 @@ http://localhost:5173
 > Para cada control explica: qué intención representa, qué parámetro modifica, qué fuerza afecta y qué comportamiento emergente debería producir.
 >
 > No agregues controles simplemente porque técnicamente sean posibles.
-
-**Decisión:** se buscó que cada control pudiera justificarse tanto desde el diseño como desde la dinámica.
-
 ---
 
 ## 6. Evitar que el sistema se convierta en un music visualizer
@@ -84,8 +73,6 @@ http://localhost:5173
 > `escucha → percepción humana → decisión → control → fuerza → comportamiento emergente`
 >
 > Diseña la interacción de modo que yo pueda escuchar la pieza, decidir qué intención quiero expresar y modificar manualmente el sistema en tiempo real.
-
-**Decisión:** se descartó cualquier solución en la que el audio activara automáticamente el comportamiento visual.
 
 ---
 
@@ -99,8 +86,6 @@ http://localhost:5173
 >
 > El score debe funcionar como una guía de interpretación, no como una animación previamente definida.
 
-**Decisión:** el score se utiliza como puente entre la escucha y la manipulación manual del instrumento.
-
 ---
 
 ## 8. Pedir modificaciones localizadas a la IA
@@ -112,7 +97,5 @@ http://localhost:5173
 > Conserva la arquitectura existente y realiza únicamente los cambios necesarios para incorporar la nueva fuerza o control.
 >
 > Después explícame qué líneas o funciones fueron modificadas y cómo se conectan con el resto del sistema.
-
-**Decisión:** este criterio ayuda a documentar qué partes fueron propuestas por la IA y cuáles fueron modificadas deliberadamente.
 
 
