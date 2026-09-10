@@ -268,7 +268,7 @@ Las decisiones de diseño no se aceptaron automáticamente. Elegí convertir los
 
 | Criterio | Puntaje | Justificación |
 |---|---:|---|
-| Leí y verifiqué que el proyecto cumple los requisitos mínimos de la unidad. | 25/25 | Revisé cada requisito y relacioné su evidencia con una función concreta del instrumento. lo relacione con el ejercicio| Puedo explicar qué representa cada variable de Kuramoto. | 25/25 | Identifico cada uno de los aspectos deel proyecto |
+| Leí y verifiqué que el proyecto cumple los requisitos mínimos de la unidad. | 25/25 | Revisé cada requisito y verifique su relacion y funcionamiento | Puedo explicar qué representa cada variable de Kuramoto. | 25/25 | Identifico cada uno de los aspectos deel proyecto |
 | Puedo explicar cómo las variables producen el comportamiento observado. | 25/25 | Puedo comprender y relacionar el funcionamiento |
 | Puedo demostrar que el proyecto cumple los objetivos de la unidad. | 25/25 | La interfaz permite recorrer los estados del ejercicio|
 | **Total** | **100/100** | El proyectocumple con los objetivos planteados|
