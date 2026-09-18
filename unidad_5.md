@@ -163,3 +163,5 @@ Si continúo desarrollando el proyecto, mejoraría la claridad de algunas figura
 - [Recursos visuales del encargo](https://drive.google.com/drive/folders/15gRLhpwspt-6iJp762h8RShex41Fv-yf).
 
 Las fotografías se incluyen como material suministrado para el ejercicio académico; no son fotografías de mi autoría.
+
+https://ble4real.github.io/simulacion_para_sistemas_interactivos/unidad_5/
