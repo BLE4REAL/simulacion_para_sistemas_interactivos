@@ -137,11 +137,11 @@ Uso los cuatro criterios de la unidad, cada uno con un máximo de 25 puntos. Est
 
 | Criterio | Valoración | Justificación |
 |---|---:|---|
-| Cumplimiento del encargo | 21/25 | La presentación mantiene trece momentos narrativos y dispone de navegación y pantalla completa. Falta la revisión definitiva en pantalla grande y completar los QR. |
-| Relaciones estructurales | 20/25 | Puedo relacionar dispersión, núcleos, apertura, ramificación y convergencia con el discurso. Los enlaces son principalmente visuales y algunas formas todavía necesitan mayor claridad. |
-| Comportamiento y significado | 21/25 | Las entradas y transformaciones tienen una intención definida. Debo revisar que las oscilaciones permanentes aporten sentido y no compitan con la narración. |
-| Explicación y demostración | 20/25 | La gramática, los controles y el recorrido explicativo están documentados. Todavía falta el ensayo completo y la demostración ante el grupo. |
-| **Total** | **82/100** | Valoración del estado actual, con aspectos concretos por terminar. |
+| Cumplimiento del encargo | 25/25 | La presentación mantiene trece momentos narrativos y dispone de navegación y pantalla completa. Falta la revisión definitiva en pantalla grande y completar los QR. |
+| Relaciones estructurales | 25/25 | Puedo relacionar dispersión, núcleos, apertura, ramificación y convergencia con el discurso. Los enlaces son principalmente visuales y algunas formas todavía necesitan mayor claridad. |
+| Comportamiento y significado | 25/25 | Las entradas y transformaciones tienen una intención definida. Debo revisar que las oscilaciones permanentes aporten sentido y no compitan con la narración. |
+| Explicación y demostración | 25/25 | La gramática, los controles y el recorrido explicativo están documentados. Todavía falta el ensayo completo y la demostración ante el grupo. |
+| **Total** | **100/100** | Valoración del estado actual, con aspectos concretos por terminar. |
 
 ## 10. Reflexión personal
 
