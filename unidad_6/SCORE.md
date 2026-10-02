@@ -10,3 +10,4 @@ Primer minuto para entrega o canción completa para exploración. Los tiempos no
 - Cierre: S para rastros fugaces, último acento manual con Espacio.
 
 Q/W/E son gestos sostenidos; no cambian modo ni energía. A/S persisten hasta repetir la tecla o reiniciar. Ajusta energía con flechas. No se afirma ensayo musical personal validado.
+Variantes: alternar Q/T para retorcer en ambos sentidos; mantener G para concentrar antes de Espacio; Z agita y X promueve exploración local. Elegir al escuchar.

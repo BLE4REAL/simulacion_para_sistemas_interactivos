@@ -8,3 +8,4 @@
 #gestureStatus{font-size:11px;margin:0;color:#dfff76}.gestures button.active{background:#dfff76;color:#111;border-color:#dfff76}
 
 select{background:#141821;color:#f0f1eb;border:1px solid #ffffff33;padding:6px}
+.gestures{flex-wrap:wrap}

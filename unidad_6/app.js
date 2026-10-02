@@ -9,9 +9,9 @@ let modeMix=[1,0,0];
 const overlay=document.querySelector('#perception'),overlayCtx=overlay.getContext('2d');
 let inspect=false,inspectedAgent=0,session=null,audioReady=false,audioName='',starting=false,runToken=0,recordURL=null;
 const modes=[['Corriente','Filamentos vivos exploran y refuerzan sus rastros.'],['Compresión','Los agentes convergen hacia filamentos cercanos y engrosan la red.'],['Ruptura','La red pierde memoria y libera corrientes de chispas.']];
-const heldGestures=new Set(),gestureNames=['Vórtice','Repulsión','Cortar'];
+const heldGestures=new Set(),gestureNames=['Vórtice','Repulsión','Cortar','Contr giro','Reunir','Agitar','Abrir caminos'];
 let trailMemory=0;
-function refreshGestures(){document.querySelectorAll('[data-gesture]').forEach(b=>{const active=heldGestures.has(Number(b.dataset.gesture));b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});$('#gestureStatus').textContent=(heldGestures.size?[...heldGestures].map(i=>gestureNames[i]).join(' + '):'Mantén Q/W/E y mueve el cursor')+' · memoria '+(trailMemory>0?'larga':trailMemory<0?'corta':'normal');}
+function refreshGestures(){document.querySelectorAll('[data-gesture]').forEach(b=>{const active=heldGestures.has(Number(b.dataset.gesture));b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});$('#gestureStatus').textContent=(heldGestures.size?[...heldGestures].map(i=>gestureNames[i]).join(' + '):'Mantén Q/W/E/T/G/Z/X y mueve el cursor')+' · memoria '+(trailMemory>0?'larga':trailMemory<0?'corta':'normal');}
 function applyGesture(index,active=true){if(active===heldGestures.has(index))return;if(active)heldGestures.add(index);else heldGestures.delete(index);refreshGestures();record(active?'gesto_inicio':'gesto_fin',{valor:gestureNames[index]});}
 function setMemory(value){trailMemory=value;refreshGestures();record('memoria',{valor:value});}
 function clearGestures(){for(const i of [...heldGestures])applyGesture(i,false);}
@@ -65,7 +65,7 @@ function step(transitionDt=1/60){
   const dx=(a.x-W*.57)/Math.min(W,H),dy=(a.y-H*.47)/Math.min(W,H);
   const theta=Math.atan2(dy,dx)+Math.PI/2+.48*Math.sin(a.x*.005+tick*.25)*Math.cos(a.y*.005-tick*.18);
   add(steer(Math.cos(theta),Math.sin(theta),a,speed),current*1.9+compression*.22+rupture*.5);
-  if(pointer.down||heldGestures.has(0)||heldGestures.has(1)){const cx=pointer.inside?pointer.x:W*.57,cy=pointer.inside?pointer.y:H*.47,dx=cx-a.x,dy=cy-a.y,d=Math.hypot(dx,dy);if(d<240&&d>25){const weight=2*(1-d/240);if(pointer.down)add(steer(dx,dy,a,speed),weight);if(heldGestures.has(0))add(steer(-dy,dx,a,speed),weight*2.5);if(heldGestures.has(1))add(steer(-dx,-dy,a,speed),weight*3);}}
+  if(pointer.down||heldGestures.size){const cx=pointer.inside?pointer.x:W*.57,cy=pointer.inside?pointer.y:H*.47,dx=cx-a.x,dy=cy-a.y,d=Math.hypot(dx,dy);if(d<240&&d>25){const weight=2*(1-d/240);if(pointer.down||heldGestures.has(4))add(steer(dx,dy,a,speed),weight*(heldGestures.has(4)?3:1));if(heldGestures.has(0))add(steer(-dy,dx,a,speed),weight*2.5);if(heldGestures.has(3))add(steer(dy,-dx,a,speed),weight*2.5);if(heldGestures.has(1))add(steer(-dx,-dy,a,speed),weight*3);if(heldGestures.has(5))add(steer(Math.sin(tick*21+i*1.7),Math.cos(tick*29+i*2.3),a,speed),weight*4);if(heldGestures.has(6))add(steer(sx,sy,a,speed),weight*3);}}
   let impulse=0;
   if(pulse){const dx=a.x-pulse.x,dy=a.y-pulse.y,d=Math.hypot(dx,dy),wave=pulse.age*560;if(Math.abs(d-wave)<115&&d>1){impulse=(1-Math.abs(d-wave)/115)*(pulse.strength||1);add(steer(dx,dy,a,speed*(1+impulse)),9*impulse);}}
   // Soft walls: each agent only reacts within a 65px margin.
@@ -77,7 +77,7 @@ function step(transitionDt=1/60){
   next[i]={x,y,vx,vy,group:a.group,impulse};maxObserved=Math.max(maxObserved,Math.hypot(vx,vy));
  }
  // The luminous structure is the deposited trail, not drawn connections.
- if(network)network.update(mode,energy,pulse,{...pointer,x:pointer.inside?pointer.x:W*.57,y:pointer.inside?pointer.y:H*.47,vortex:heldGestures.has(0),repel:heldGestures.has(1),erase:heldGestures.has(2),memory:trailMemory},W,H,transitionDt);
+ if(network)network.update(mode,energy,pulse,{...pointer,x:pointer.inside?pointer.x:W*.57,y:pointer.inside?pointer.y:H*.47,vortex:heldGestures.has(0),repel:heldGestures.has(1),erase:heldGestures.has(2),reverse:heldGestures.has(3),gather:heldGestures.has(4),shake:heldGestures.has(5),explore:heldGestures.has(6),phase:tick,memory:trailMemory},W,H,transitionDt);
  cameraKick*=Math.exp(-transitionDt*9);
  const charge=chargeStart===null?0:Math.min(1,(performance.now()-chargeStart)/1400);
  canvas.style.transform=`translate(${Math.sin(tick*113)*cameraKick*3}px,${Math.cos(tick*137)*cameraKick*3}px) scale(${1+cameraKick*.018+charge*.012})`;
@@ -129,7 +129,7 @@ $('#audio').addEventListener('loadedmetadata',()=>{audioReady=Number.isFinite($(
 $('#audio').addEventListener('error',()=>{audioReady=false;stop('error de audio');$('#audioStatus').textContent='Audio no válido. Elige otro archivo.';});
 $('#audio').addEventListener('ended',()=>{if(playing)stop('archivo terminado');});
 canvas.addEventListener('pointerdown',()=>record('atraer',{x:pointer.x/W,y:pointer.y/H}));canvas.addEventListener('pointerup',()=>record('soltar'));
-document.addEventListener('keydown',e=>{if(e.ctrlKey||e.altKey||e.metaKey)return;const k=String(e.key||'').toLowerCase();const code=({q:'KeyQ',w:'KeyW',e:'KeyE',a:'KeyA',s:'KeyS'}[k])||e.code;if($('#recordDialog').open||e.target.matches('textarea,select,input[type=text],[contenteditable=true]'))return;if(['Space','Digit1','Digit2','Digit3','KeyR','KeyH','KeyF','KeyD','KeyP','KeyQ','KeyW','KeyE','KeyA','KeyS'].includes(code))e.preventDefault();if(['ArrowUp','ArrowDown'].includes(code)&&!e.target.matches('input[type=range]')){e.preventDefault();setEnergy(energy+(code==='ArrowUp'?.1:-.1));return;}if(e.repeat)return;if(['KeyQ','KeyW','KeyE'].includes(code))applyGesture(['KeyQ','KeyW','KeyE'].indexOf(code));if(code==='KeyA')setMemory(trailMemory===1?0:1);if(code==='KeyS')setMemory(trailMemory===-1?0:-1);if(code==='Space')beginCharge();if(/^Digit[123]$/.test(code))setMode(Number(code.slice(-1))-1);if(code==='KeyR')reset();if(code==='KeyH')toggleUI();if(code==='KeyF')fullscreen();if(code==='KeyD')toggleInspect();if(code==='KeyP')rehearse();});
+document.addEventListener('keydown',e=>{if(e.ctrlKey||e.altKey||e.metaKey)return;const k=String(e.key||'').toLowerCase();const code=({q:'KeyQ',w:'KeyW',e:'KeyE',a:'KeyA',s:'KeyS',t:'KeyT',g:'KeyG',z:'KeyZ',x:'KeyX'}[k])||e.code;if($('#recordDialog').open||e.target.matches('textarea,select,input[type=text],[contenteditable=true]'))return;if(['Space','Digit1','Digit2','Digit3','KeyR','KeyH','KeyF','KeyD','KeyP','KeyQ','KeyW','KeyE','KeyT','KeyG','KeyZ','KeyX','KeyA','KeyS'].includes(code))e.preventDefault();if(['ArrowUp','ArrowDown'].includes(code)&&!e.target.matches('input[type=range]')){e.preventDefault();setEnergy(energy+(code==='ArrowUp'?.1:-.1));return;}if(e.repeat)return;if(['KeyQ','KeyW','KeyE','KeyT','KeyG','KeyZ','KeyX'].includes(code))applyGesture(['KeyQ','KeyW','KeyE','KeyT','KeyG','KeyZ','KeyX'].indexOf(code));if(code==='KeyA')setMemory(trailMemory===1?0:1);if(code==='KeyS')setMemory(trailMemory===-1?0:-1);if(code==='Space')beginCharge();if(/^Digit[123]$/.test(code))setMode(Number(code.slice(-1))-1);if(code==='KeyR')reset();if(code==='KeyH')toggleUI();if(code==='KeyF')fullscreen();if(code==='KeyD')toggleInspect();if(code==='KeyP')rehearse();});
 window.addEventListener('resize',resize);document.addEventListener('visibilitychange',()=>{last=0;acc=0;if(document.hidden)stop('pestaña oculta');});
 // Read-only diagnostics for behavior and numerical stability checks.
 window.instrument={getState:()=>({mode,energy,elapsed,playing,count:agents.length,modeMix:[...modeMix],networkMix:network?[...network.mix]:null,...forceStats,finite:agents.every(a=>[a.x,a.y,a.vx,a.vy].every(Number.isFinite))})};
@@ -146,4 +146,5 @@ requestAnimationFrame(frame);
 
 $('#durationMode').addEventListener('change',updateDuration);$('#audio').addEventListener('loadedmetadata',updateDuration);
 
-document.addEventListener('keyup',e=>{const i=['q','w','e'].indexOf(String(e.key||'').toLowerCase());const j=['KeyQ','KeyW','KeyE'].indexOf(e.code);if(i>=0||j>=0)applyGesture(i>=0?i:j,false);});window.addEventListener('blur',clearGestures);document.addEventListener('visibilitychange',()=>{if(document.hidden)clearGestures();});$('#memoryLong').onclick=()=>setMemory(trailMemory===1?0:1);$('#memoryShort').onclick=()=>setMemory(trailMemory===-1?0:-1);
+document.addEventListener('keyup',e=>{const i=['q','w','e','t','g','z','x'].indexOf(String(e.key||'').toLowerCase());const j=['KeyQ','KeyW','KeyE','KeyT','KeyG','KeyZ','KeyX'].indexOf(e.code);if(i>=0||j>=0)applyGesture(i>=0?i:j,false);});window.addEventListener('blur',clearGestures);document.addEventListener('visibilitychange',()=>{if(document.hidden)clearGestures();});$('#memoryLong').onclick=()=>setMemory(trailMemory===1?0:1);$('#memoryShort').onclick=()=>setMemory(trailMemory===-1?0:-1);
+

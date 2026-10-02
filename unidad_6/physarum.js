@@ -52,7 +52,7 @@ class LivingNetwork {
    let hit=0;const px=x/w*W,py=y/h*H;
    if(pulse){const dx=px-pulse.x,dy=py-pulse.y,d=Math.hypot(dx,dy);hit=Math.max(0,1-Math.abs(d-pulse.age*560)/115)*(pulse.strength||1);if(hit>0){const desired=Math.atan2(dy* h/H,dx*w/W);a+=Math.atan2(Math.sin(desired-a),Math.cos(desired-a))*hit*.9;}}
    if(pointer&&pointer.down){const dx=pointer.x-px,dy=pointer.y-py,d=Math.hypot(dx,dy);if(d<240&&d>20){const desired=Math.atan2(dy*h/H,dx*w/W);a+=Math.atan2(Math.sin(desired-a),Math.cos(desired-a))*.12*(1-d/240);}}
-   if(pointer&&(pointer.vortex||pointer.repel)){const dx=pointer.x-px,dy=pointer.y-py,d=Math.hypot(dx,dy);if(d<240&&d>20){let ux=0,uy=0;if(pointer.vortex){ux-=dy;uy+=dx;}if(pointer.repel){ux-=dx;uy-=dy;}const desired=Math.atan2(uy*h/H,ux*w/W);a+=Math.atan2(Math.sin(desired-a),Math.cos(desired-a))*.5*(1-d/240);}}
+   if(pointer&&(pointer.vortex||pointer.reverse||pointer.repel||pointer.gather||pointer.shake||pointer.explore)){const dx=pointer.x-px,dy=pointer.y-py,d=Math.hypot(dx,dy);if(d<240&&d>20){const weight=1-d/240;let ux=0,uy=0;if(pointer.vortex){ux-=dy;uy+=dx;}if(pointer.reverse){ux+=dy;uy-=dx;}if(pointer.repel){ux-=dx;uy-=dy;}if(pointer.gather){ux+=dx*1.5;uy+=dy*1.5;}if(ux!==0||uy!==0){const desired=Math.atan2(uy*h/H,ux*w/W);a+=Math.atan2(Math.sin(desired-a),Math.cos(desired-a))*.5*weight;}if(pointer.shake)a+=Math.sin((pointer.phase||0)*27+i*2.399)*1.1*weight;if(pointer.explore){const l=this.sample(x+Math.cos(a-spread)*sensor,y+Math.sin(a-spread)*sensor),r=this.sample(x+Math.cos(a+spread)*sensor,y+Math.sin(a+spread)*sensor);a+=(l<r?-1:1)*turn*1.8*weight;}}}
    const shock=Math.max(hit,this.impact[i]*.90);
    const speed=baseSpeed*(1+shock*9);
    speedSum+=speed;

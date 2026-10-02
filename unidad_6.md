@@ -159,4 +159,5 @@ Se incorpora selector Primer minuto/Canción completa, conservando interpretaci�
 ## Revisión GESTOS LOCALES
 Se sustituyen los presets Q/W/E (modo y energía) por intervenciones independientes: mantener Q genera giro tangencial local; W repulsión radial local; E borra el campo en un radio de 85 px. Q/W afectan solo agentes a menos de 240 px. Se pueden combinar con 1/2/3, energía y Espacio. A/S alternan memoria larga/corta; repetir vuelve a normal. El usuario conduce manualmente; no hay respuesta automática a la canción. Se conservan 6000+360 agentes.
 Al soltar o perder foco terminan Q/W/E; inicio/fin y memoria quedan registrados durante el ensayo. Las referencias históricas a Impulso/Acumular/Descargar describen versiones anteriores.
+Ampliación manual: T invierte giro local; G atrae mediante tecla; Z perturba orientación cercana; X evita depósitos existentes usando los sensores. No añade agentes ni trayectoria global. Pruebas de localidad extendidas a los seis gestos de movimiento.
 
