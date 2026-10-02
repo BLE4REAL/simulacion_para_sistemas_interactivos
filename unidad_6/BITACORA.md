@@ -4,7 +4,7 @@
 
 **[ABRIR SOBRECARGA](https://ble4real.github.io/simulacion_para_sistemas_interactivos/unidad_6/)**
 
-Enlace público para cualquier computador con navegador actualizado. Pump It está incorporada: pulsa P o Iniciar ensayo para escuchar el primer minuto desde cualquier computador.
+Enlace público para cualquier computador con navegador actualizado. Para escuchar Pump It, pulsa Cargar canción y selecciona tu archivo en ese equipo. La música se carga localmente.
 
 [Guía de uso](https://ble4real.github.io/simulacion_para_sistemas_interactivos/unidad_6/guia.html)
 
@@ -153,4 +153,4 @@ Q/W/E admiten letra y código físico; cada activación ilumina el botón e indi
 Autoevaluación y publicación se aplazan por decisión del estudiante hasta completar el instrumento.
 
 
-
+Se incorpora selector Primer minuto/Canción completa, conservando interpretación manual. El registro y progreso usan la duración seleccionada; las pruebas comprueban continuación después de 60 s y cierre al final.
