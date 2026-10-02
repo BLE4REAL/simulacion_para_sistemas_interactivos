@@ -163,3 +163,4 @@ Ampliación manual: T invierte giro local; G atrae mediante tecla; Z perturba or
 
 Ajuste final: radios de movimiento 420 px y corte E 160 px, ampliados a solicitud del usuario.
 Gestos intensificados: fuerzas locales y giros aumentados; corte de rastro más fuerte. Radios y población conservados.
+Reinicio: tecla L; R deja de reiniciar.

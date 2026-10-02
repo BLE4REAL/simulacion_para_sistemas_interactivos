@@ -16,7 +16,7 @@ Abrir Sobrecarga.html en navegador habitual. Incorpora canción, estilos y códi
 | ↑ / ↓ o deslizador | Energía |
 | Mouse sostenido | Atracción local, radio 240 px |
 | P | Iniciar/detener audio; corte a 60 s |
-| R | Reiniciar agentes y rastro; Corriente al 40 % |
+| L | Reiniciar agentes y rastro; Corriente al 40 % |
 | F / H / D | Pantalla completa / ocultar controles / percepción flocking |
 | Guardar ensayo | Registro JSON visible y descargable de acciones y tiempos |
 
@@ -44,3 +44,4 @@ Duración: Primer minuto (predeterminado para entrega) o Canción completa (3:33
 Vigente GESTOS LOCALES: Q/W/E reemplazan los presets anteriores. Mantener Q=vórtice, W=repulsión, E=corte local; A/S alternan memoria larga/corta/normal. Mantienen modo y energía, pueden combinarse; perder foco cancela gestos. Ver SCORE.md actualizado.
 Gestos nuevos sostenidos: T contragiro, G reunir, Z agitar, X abrir caminos. Todos alrededor del cursor (240 px); se combinan con Q/W/E, modos y energia. Soltar o perder foco cancela.
 Radios vigentes: Q/W/T/G/Z/X y atracción por mouse 420 px; corte E 160 px.
+
