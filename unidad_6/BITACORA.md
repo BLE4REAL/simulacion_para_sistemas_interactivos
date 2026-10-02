@@ -4,7 +4,7 @@
 
 **[ABRIR SOBRECARGA](https://ble4real.github.io/simulacion_para_sistemas_interactivos/unidad_6/)**
 
-Enlace público para cualquier computador con navegador actualizado. Para escuchar Pump It, pulsa Cargar canción y selecciona tu archivo en ese equipo. La música se carga localmente.
+Enlace público para cualquier computador con navegador actualizado. Pump It está incorporada: pulsa P o Iniciar ensayo para escuchar el primer minuto desde cualquier computador.
 
 [Guía de uso](https://ble4real.github.io/simulacion_para_sistemas_interactivos/unidad_6/guia.html)
 
@@ -151,5 +151,6 @@ Capturas reales tomadas durante las iteraciones y pruebas de desarrollo, incorpo
 ## Corrección de controles · 2 de octubre
 Q/W/E admiten letra y código físico; cada activación ilumina el botón e indica nombre y energía. Verificación mediante teclado en navegador: Q→Corriente 60 %, W→Compresión 70 %, E→Ruptura 85 % y estallido. Hace falta foco dentro de la página; identificador GESTOS permite reconocer el archivo nuevo. No se ha identificado con certeza la causa del fallo en el navegador del estudiante.
 Autoevaluación y publicación se aplazan por decisión del estudiante hasta completar el instrumento.
+
 
 

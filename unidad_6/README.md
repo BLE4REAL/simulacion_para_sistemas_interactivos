@@ -41,3 +41,4 @@ Pendientes personales: ensayo musical, reflexión, autoevaluación y publicació
 
 Revisión PRESIÓN: mantén Espacio hasta 1.4 s y suelta para descargar de 1× a 2×. Incluye acercamiento y sacudida breve; sin nuevos agentes. Un toque o E conserva descarga inmediata. Perder foco cancela la carga.
 Versión pública: la canción se carga localmente con Cargar canción; el repositorio no incluye audio. Sobrecarga.html usa los archivos de esta carpeta.
+Actualización: por solicitud del usuario la canción está incluida también en la publicación. P inicia el primer minuto sin carga manual.
