@@ -161,3 +161,4 @@ Se sustituyen los presets Q/W/E (modo y energía) por intervenciones independien
 Al soltar o perder foco terminan Q/W/E; inicio/fin y memoria quedan registrados durante el ensayo. Las referencias históricas a Impulso/Acumular/Descargar describen versiones anteriores.
 Ampliación manual: T invierte giro local; G atrae mediante tecla; Z perturba orientación cercana; X evita depósitos existentes usando los sensores. No añade agentes ni trayectoria global. Pruebas de localidad extendidas a los seis gestos de movimiento.
 Ajuste final solicitado: radios de movimiento ampliados de 240 a 420 px; corte E de 85 a 160 px. Conserva caída gradual de fuerza con distancia y cantidad de agentes.
+Ajuste expresivo final: fuerzas de gestos aumentadas, mayor capacidad de giro local sin elevar velocidad máxima del flocking; Physarum responde más intensamente a giro/agitación/exploración. Corte elimina 95 % del rastro por paso en su radio. Radios y población se conservan.

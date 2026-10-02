@@ -162,3 +162,4 @@ Al soltar o perder foco terminan Q/W/E; inicio/fin y memoria quedan registrados 
 Ampliación manual: T invierte giro local; G atrae mediante tecla; Z perturba orientación cercana; X evita depósitos existentes usando los sensores. No añade agentes ni trayectoria global. Pruebas de localidad extendidas a los seis gestos de movimiento.
 
 Ajuste final: radios de movimiento 420 px y corte E 160 px, ampliados a solicitud del usuario.
+Gestos intensificados: fuerzas locales y giros aumentados; corte de rastro más fuerte. Radios y población conservados.
