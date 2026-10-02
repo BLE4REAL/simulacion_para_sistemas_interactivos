@@ -65,7 +65,7 @@ function step(transitionDt=1/60){
   const dx=(a.x-W*.57)/Math.min(W,H),dy=(a.y-H*.47)/Math.min(W,H);
   const theta=Math.atan2(dy,dx)+Math.PI/2+.48*Math.sin(a.x*.005+tick*.25)*Math.cos(a.y*.005-tick*.18);
   add(steer(Math.cos(theta),Math.sin(theta),a,speed),current*1.9+compression*.22+rupture*.5);
-  if(pointer.down||heldGestures.size){const cx=pointer.inside?pointer.x:W*.57,cy=pointer.inside?pointer.y:H*.47,dx=cx-a.x,dy=cy-a.y,d=Math.hypot(dx,dy);if(d<240&&d>25){const weight=2*(1-d/240);if(pointer.down||heldGestures.has(4))add(steer(dx,dy,a,speed),weight*(heldGestures.has(4)?3:1));if(heldGestures.has(0))add(steer(-dy,dx,a,speed),weight*2.5);if(heldGestures.has(3))add(steer(dy,-dx,a,speed),weight*2.5);if(heldGestures.has(1))add(steer(-dx,-dy,a,speed),weight*3);if(heldGestures.has(5))add(steer(Math.sin(tick*21+i*1.7),Math.cos(tick*29+i*2.3),a,speed),weight*4);if(heldGestures.has(6))add(steer(sx,sy,a,speed),weight*3);}}
+  if(pointer.down||heldGestures.size){const cx=pointer.inside?pointer.x:W*.57,cy=pointer.inside?pointer.y:H*.47,dx=cx-a.x,dy=cy-a.y,d=Math.hypot(dx,dy);if(d<420&&d>25){const weight=2*(1-d/420);if(pointer.down||heldGestures.has(4))add(steer(dx,dy,a,speed),weight*(heldGestures.has(4)?3:1));if(heldGestures.has(0))add(steer(-dy,dx,a,speed),weight*2.5);if(heldGestures.has(3))add(steer(dy,-dx,a,speed),weight*2.5);if(heldGestures.has(1))add(steer(-dx,-dy,a,speed),weight*3);if(heldGestures.has(5))add(steer(Math.sin(tick*21+i*1.7),Math.cos(tick*29+i*2.3),a,speed),weight*4);if(heldGestures.has(6))add(steer(sx,sy,a,speed),weight*3);}}
   let impulse=0;
   if(pulse){const dx=a.x-pulse.x,dy=a.y-pulse.y,d=Math.hypot(dx,dy),wave=pulse.age*560;if(Math.abs(d-wave)<115&&d>1){impulse=(1-Math.abs(d-wave)/115)*(pulse.strength||1);add(steer(dx,dy,a,speed*(1+impulse)),9*impulse);}}
   // Soft walls: each agent only reacts within a 65px margin.
@@ -147,4 +147,5 @@ requestAnimationFrame(frame);
 $('#durationMode').addEventListener('change',updateDuration);$('#audio').addEventListener('loadedmetadata',updateDuration);
 
 document.addEventListener('keyup',e=>{const i=['q','w','e','t','g','z','x'].indexOf(String(e.key||'').toLowerCase());const j=['KeyQ','KeyW','KeyE','KeyT','KeyG','KeyZ','KeyX'].indexOf(e.code);if(i>=0||j>=0)applyGesture(i>=0?i:j,false);});window.addEventListener('blur',clearGestures);document.addEventListener('visibilitychange',()=>{if(document.hidden)clearGestures();});$('#memoryLong').onclick=()=>setMemory(trailMemory===1?0:1);$('#memoryShort').onclick=()=>setMemory(trailMemory===-1?0:-1);
+
 
