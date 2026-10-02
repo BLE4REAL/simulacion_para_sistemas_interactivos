@@ -41,3 +41,4 @@ Pendientes personales: ensayo musical, reflexión, autoevaluación y publicació
 
 Revisión PRESIÓN: mantén Espacio hasta 1.4 s y suelta para descargar de 1× a 2×. Incluye acercamiento y sacudida breve; sin nuevos agentes. Un toque o E conserva descarga inmediata. Perder foco cancela la carga.
 Duración: Primer minuto (predeterminado para entrega) o Canción completa (3:33 con el audio incorporado). Selecciona antes de P; el selector se bloquea mientras reproduce y el registro conserva el límite elegido.
+Vigente GESTOS LOCALES: Q/W/E reemplazan los presets anteriores. Mantener Q=vórtice, W=repulsión, E=corte local; A/S alternan memoria larga/corta/normal. Mantienen modo y energía, pueden combinarse; perder foco cancela gestos. Ver SCORE.md actualizado.

@@ -29,7 +29,10 @@ class LivingNetwork {
   b.fill(0);
   const sensor=6+compression*10,spread=.8-compression*.3,turn=.65-compression*.35;
   const baseSpeed=(1.05+this.liveEnergy*1.45)*(1-compression*.1+rupture*.65);
-  const depositScale=14000/this.count,retention=.97+compression*.008-rupture*.11;
+  const memory=pointer?.memory||0;
+  const depositScale=14000/this.count,retention=Math.min(.995,.97+compression*.008-rupture*.11+(memory>0?.014:memory<0?-.04:0));
+  // A local brush removes trail before all sensors read it, never a global target.
+  if(pointer?.erase){const cx=pointer.x/W*w,cy=pointer.y/H*h,rx=85/W*w,ry=85/H*h;for(let yy=Math.max(0,Math.floor(cy-ry));yy<Math.min(h,cy+ry);yy++)for(let xx=Math.max(0,Math.floor(cx-rx));xx<Math.min(w,cx+rx);xx++){if(((xx-cx)/rx)**2+((yy-cy)/ry)**2<1)f[yy*w+xx]*=.25;}}
   // Saturation makes crowded knots less attractive than their connecting strands.
   const sensed=value=>value/(1+compression*value*value/576);
   let speedSum=0;
@@ -49,6 +52,7 @@ class LivingNetwork {
    let hit=0;const px=x/w*W,py=y/h*H;
    if(pulse){const dx=px-pulse.x,dy=py-pulse.y,d=Math.hypot(dx,dy);hit=Math.max(0,1-Math.abs(d-pulse.age*560)/115)*(pulse.strength||1);if(hit>0){const desired=Math.atan2(dy* h/H,dx*w/W);a+=Math.atan2(Math.sin(desired-a),Math.cos(desired-a))*hit*.9;}}
    if(pointer&&pointer.down){const dx=pointer.x-px,dy=pointer.y-py,d=Math.hypot(dx,dy);if(d<240&&d>20){const desired=Math.atan2(dy*h/H,dx*w/W);a+=Math.atan2(Math.sin(desired-a),Math.cos(desired-a))*.12*(1-d/240);}}
+   if(pointer&&(pointer.vortex||pointer.repel)){const dx=pointer.x-px,dy=pointer.y-py,d=Math.hypot(dx,dy);if(d<240&&d>20){let ux=0,uy=0;if(pointer.vortex){ux-=dy;uy+=dx;}if(pointer.repel){ux-=dx;uy-=dy;}const desired=Math.atan2(uy*h/H,ux*w/W);a+=Math.atan2(Math.sin(desired-a),Math.cos(desired-a))*.5*(1-d/240);}}
    const shock=Math.max(hit,this.impact[i]*.90);
    const speed=baseSpeed*(1+shock*9);
    speedSum+=speed;
