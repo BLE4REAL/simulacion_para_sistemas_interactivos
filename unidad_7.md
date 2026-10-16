@@ -4,7 +4,7 @@
 
 ## Bitácora
 
-Dejé las letras de Adidas regadas al azar para juntarlas en el orden que yo quiera y formar equipos. Al conectarlas se alinean y al tocarlas hacen una pequeña carrera de relevos, para mostrar el trabajo en equipo y darle un toque deportivo.
+Al formar Adidas, baja una meta y las letras la cruzan como equipo. Después de celebrar, la meta sale por abajo y las letras vuelven entrando desde la izquierda para empezar otra vez.
 
 ## Autoevaluación
 
@@ -16,4 +16,5 @@ Dejé las letras de Adidas regadas al azar para juntarlas en el orden que yo qui
 | Resolución tipográfica y experiencia de juego | 25/25 | Corregí los solapes, el espaciado y los cambios bruscos. Las letras se alinean respetando el orden que yo les doy. |
 
 **Total: 96/100.**
+
 
