@@ -4,7 +4,7 @@
 
 ## Bitácora
 
-Al formar Adidas, baja una meta y las letras la cruzan como equipo. Después de celebrar, la meta sale por abajo y las letras vuelven entrando desde la izquierda para empezar otra vez.
+Al formar Adidas, baja una meta y las letras la cruzan como equipo, después de celebrar, la meta sale por abajo y las letras vuelven entrando desde la izquierda para volver a empezar
 
 ## Autoevaluación
 
