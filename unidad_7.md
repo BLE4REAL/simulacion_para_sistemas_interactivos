@@ -10,10 +10,10 @@ Al formar Adidas, baja una meta y las letras la cruzan como equipo. Después de 
 
 | Criterio | Nota | Justificación |
 | --- | --- | --- |
-| Cumplimiento del encargo | 25/25 | Usé las letras completas de Adidas en una portada web donde se pueden mover, unir y separar. |
-| Comprensión y verificación | 23/25 | Cada letra tiene su posición, su movimiento y sus conexiones; al quitar una del medio se divide el equipo. Falta revisar cómo funciona en un celular real. |
-| Interacción e identidad | 23/25 | Quise mostrar el trabajo en equipo con las conexiones y los relevos. Falta probar si otra persona lo entiende sin explicárselo. |
-| Resolución tipográfica y experiencia de juego | 25/25 | Corregí los solapes, el espaciado y los cambios bruscos. Las letras se alinean respetando el orden que yo les doy. |
+| Cumplimiento del encargo | 25/25 | use cada letra de la palabra adidas para generar la experiencia donde se pueden unir y separar|
+| Comprensión y verificación | 23/25 | cada letra tiene su espacio y su funcion para completar su tarea en conjunto, esta verificado su funcionamiento |
+| Interacción e identidad | 23/25 | Quise mostrar el trabajo en equipo con las conexiones y los relevos tambien una recompensa al final para que se entienda el ejrcicio |
+| Resolución tipográfica y experiencia de juego | 25/25 | resolvi algunas carencias que tenia al inicio con respecto a acomodar las letras y su forma de interactuar |
 
 **Total: 96/100.**
 
