@@ -1,0 +1,13 @@
+Guion de exposición. El atajo.
+
+Bueno, para esta unidad la pregunta era ¿para qué tomarte el trabajo?. Yo quise responderla pensando en la inteligencia artificial y en por qué sigue siendo importante esforzarse y entender lo que uno está haciendo.
+
+Yo creo que la IA puede ayudarnos a hacer muchas cosas, pero uno también necesita bases para saber qué pedirle y reconocer cuando algo no está bien. Por ejemplo, uno le puede pedir un modelo 3D, pero tiene que saber de geometría o topología para poder revisar si funciona y cómo corregirlo. Y también está la parte de la estética y de las ideas que uno quiere aportar.
+
+Con esa idea hice una experiencia que se llama El atajo. Aquí hay una señal que tiene que pasar por las personas y llegar a la casa. Uno va tocando los personajes para cambiar las conexiones, ver por dónde pasa la señal y buscar cómo hacer que llegue a todos.
+
+En los siguientes niveles van apareciendo más personas y conexiones que hay que revisar. En el último, por ejemplo, algunos caminos se cortan y uno tiene que volver a conectarlos. La idea es que la persona vaya descubriendo qué hacer al interactuar, sin tener una interfaz llena de botones o explicaciones.
+
+Al principio habíamos pensado en una figura 3D que se pudiera dibujar y moldear, pero después quise llevarlo hacia una experiencia más sencilla visualmente, donde las conexiones fueran el centro. Usé la IA como apoyo para desarrollar el proyecto y fui dando indicaciones y proponiendo cambios en el diseño y en la forma de interactuar.
+
+Para mí, eso se relaciona con la pregunta porque no basta con que algo funcione de cualquier manera. Hay que mirar qué está pasando, decidir qué se quiere lograr y hacer cambios. Creo que ahí está una parte importante de tomarse el trabajo, aportar el criterio y las ideas propias para llegar a un resultado que tenga sentido para uno.
