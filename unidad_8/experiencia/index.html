@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#faf9f6"><title>El atajo</title><link rel="icon" href="data:,"><link rel="stylesheet" href="./styles.css"></head>
+<body>
+  <main>
+    <header><a class="wordmark" href="./">El atajo</a><nav aria-label="Opciones"><button id="sound-toggle" aria-label="Silenciar sonido" aria-pressed="true" title="Sonido">♪</button><button id="restart" aria-label="Empezar de nuevo" title="Empezar de nuevo">↶</button></nav></header>
+    <section class="story" aria-label="La historia"><p id="chapter"></p><h1 id="title"></h1><p id="narration"></p></section>
+    <svg id="world" viewBox="0 0 920 490" role="group" aria-label="Conecta personas: elige un origen y después toca su destino. Las señales siguen las flechas."></svg>
+    <div class="decisions"><p id="instruction" role="status" aria-live="polite"></p><div id="actions"></div></div>
+    <p id="reflection" class="reflection" hidden></p>
+    <footer><span>Tab y Enter también conectan.</span><span>Una simulación programada. Tu partida se guarda aquí.</span></footer>
+    <noscript>Esta historia necesita JavaScript para que las señales recorran sus conexiones.</noscript>
+  </main>
+  <script type="module" src="./game.js"></script>
+</body></html>
